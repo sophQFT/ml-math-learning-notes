@@ -1,6 +1,6 @@
 ﻿# ML / Math Learning Notes
 
-物理学科出身として、機械学習・深層学習・数理統計・統計力学を数理的に理解するために作成している学習ノート、ゼミ発表資料、実装メモを整理するリポジトリです。
+機械学習・深層学習・数理統計・統計力学を数理的に理解するために作成している学習ノート、ゼミ発表資料、実装メモを整理するリポジトリです。
 
 ## Interests
 
@@ -8,9 +8,24 @@
 - Transformer / Attention
 - Mathematical Statistics
 - Statistical Mechanics
-- Thermodynamics
-- Complex Systems
 - Probabilistic Modeling
+
+## Highlights
+
+### 1. Softmax Regression and Boltzmann Distribution
+
+Dive into Deep Learning 輪読ゼミで作成したソフトマックス回帰の発表資料です。  
+線形モデル、ソフトマックス関数、ボルツマン分布との対応、交差エントロピー損失、PyTorchによるFashion-MNISTの読み込みなどを整理しています。
+
+- Slide: `slides/d2l-softmax-regression/softmax-regression-d2l.pdf`
+- Source: `slides/d2l-softmax-regression/main.tex`
+
+### 2. Mathematical Statistics Notes
+
+久保川『現代数理統計学の基礎』を学習する中で作成した行間補足ノートです。  
+標本分布、不偏性、ヘルマート行列を用いた独立性の証明、確率収束、大数の弱法則、中心極限定理、スラツキーの定理などを整理しています。
+
+- Notes: `notes/statistics/kubokawa-math-statistics/`
 
 ## Contents
 
