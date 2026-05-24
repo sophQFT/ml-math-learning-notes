@@ -1,0 +1,1473 @@
+\documentclass[dvipdfmx,uplatex,11pt]{beamer}
+
+% --- 日本語設定 ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{bxdpx-beamer} % dvipdfmx + beamer の安定化
+\usepackage{pxjahyper}   % 日本語しおり対策
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+% --- デザイン設定 ---
+\usetheme{Metropolis} % シンプルでモダンなテーマ
+\usecolortheme{default}
+\usefonttheme{professionalfonts}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+% --- 数学・記号 ---
+\usepackage{amsmath,amsfonts,bm}
+\usepackage{mathtools}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% --- 枠付きボックス ---
+
+
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{d2lbox}[1]{
+  enhanced,
+  colback=black!7,
+  colframe=black!7,
+  colbacktitle=black!22,
+  coltitle=black!80,
+  title=#1,
+  fonttitle=\bfseries,
+  boxrule=0pt,
+  arc=0pt,
+  outer arc=0pt,
+  left=2mm,
+  right=2mm,
+  top=0mm,
+  bottom=0mm,
+  toptitle=1mm,
+  bottomtitle=1mm
+}
+\newtcolorbox{d2lplainbox}{
+  enhanced,
+  colback=black!7,
+  colframe=black!7,
+  boxrule=0pt,
+  arc=0pt,
+  outer arc=0pt,
+  left=2mm,
+  right=2mm,
+  top=0mm,
+  bottom=0mm
+}
+
+% --- コード表示 ---
+\usepackage{listings}
+\lstdefinestyle{pytorch}{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!60!black},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framerule=0.2pt,
+  rulecolor=\color{black!25},
+  backgroundcolor=\color{black!3},
+  columns=fullflexible,
+  keepspaces=true,
+  xleftmargin=2mm,
+  xrightmargin=2mm
+}
+\lstset{style=pytorch}
+
+% --- 強調用 ---
+\newcommand{\key}[1]{\alert{#1}}
+\newcommand{\shape}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+
+% --- タイトル情報 ---
+\title{ソフトマックス回帰：分類のための線形ニューラルネットワーク}
+\subtitle{Dive into Deep Learning 輪読ゼミ}
+\author{山口 海}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+%================================================
+
+%================================================
+\begin{frame}[allowframebreaks]{目次}
+  \tableofcontents[
+    sectionstyle=show,
+    subsectionstyle=show/show/show
+  ]
+\end{frame}
+
+%================================================
+
+%================================================
+\section{4.1. ソフトマックス回帰の概要}
+\subsection{4.1.1. 回帰から分類へ}
+\begin{frame}{4.1.1. 回帰から分類へ}
+線形回帰では，入力から\alert{連続値}を予測した．
+
+\begin{block}{例：回帰}
+家の価格はいくらか？\\
+患者は何日入院するか？
+\end{block}
+
+ソフトマックス回帰では，入力から\alert{カテゴリ}を予測する．
+
+\begin{block}{例：分類}
+この画像は猫・犬・鶏のどれか？\\
+このメールは迷惑メールか？
+\end{block}
+\begin{d2lplainbox}
+  分類では，単に数値を出すだけでなく，\\
+\alert{各クラスに属する確率}として解釈できる出力がほしい
+\end{d2lplainbox}
+\end{frame}
+
+%================================================
+
+%================================================
+\begin{frame}{分類には2つの見方がある}
+\begin{block}{ハードな分類}
+入力を1つのクラスに割り当てる．
+\[
+  \text{image} \longmapsto \text{dog}
+\]
+\end{block}
+
+\begin{block}{ソフトな分類}
+各クラスに属する確率を出す．
+\[
+  \text{image} \longmapsto
+  \begin{cases}
+    P(\text{cat}) = 0.1\\
+    P(\text{dog}) = 0.8\\
+    P(\text{chicken}) = 0.1
+  \end{cases}
+\]
+\end{block}
+
+\vspace{0.5em}
+\centering
+ソフトマックス回帰では，この\alert{確率的な出力}を作る．
+\end{frame}
+
+%================================================
+
+
+\begin{frame}{単純な画像分類問題}
+
+ここでは，$2 \times 2$ のグレースケール画像を考える．
+
+\[
+\begin{pmatrix}
+x_1 & x_2\\
+x_3 & x_4
+\end{pmatrix}
+\quad \longmapsto \quad
+(x_1,x_2,x_3,x_4)
+\]
+
+\begin{itemize}
+  \item 各画素値を1つの特徴量として扱う
+  \item 入力は4次元ベクトル
+  \[
+  \bm{x} = (x_1,x_2,x_3,x_4)^\top
+  \]
+  \item 出力クラスは3つ
+  \[
+  \{\text{cat},\ \text{chicken},\ \text{dog}\}
+  \]
+\end{itemize}
+各画像は，この3つのうち\alert{どれか1つ}に属すると仮定する．
+
+\end{frame}
+%================================================
+\begin{frame}{ラベルの表し方}
+カテゴリを単に整数で表すこともできる．
+
+\[
+  y \in \{1,2,3\}
+\]
+
+\vspace{1em}
+しかし，この表し方だと問題がある．
+
+\begin{alertblock}{整数ラベルの注意点}
+\begin{itemize}
+  \item cat < chicken < dog という意図しない大小関係が生まれる
+  \item 多くの分類問題では，クラス間に自然な順序はない
+\end{itemize}
+\end{alertblock}
+
+\begin{block}{そこで}
+画像識別や自然言語処理でよく使われるのが，
+\alert{one-hot 表現}である．
+\end{block}
+
+
+\end{frame}
+
+%================================================
+\begin{frame}{one-hot エンコーディング}
+分類では，ラベルをベクトルで表すことが多い．
+
+\[
+y \in \{(1,0,0),\ (0,1,0),\ (0,0,1)\}
+\]
+
+\vspace{1em}
+\begin{center}
+\begin{tabular}{c|c}
+クラス & one-hot ベクトル \\ \hline
+cat & $(1,0,0)$ \\
+chicken & $(0,1,0)$ \\
+dog & $(0,0,1)$
+\end{tabular}
+\end{center}
+
+\vspace{1em}
+\centering
+正解クラスの成分だけが\alert{1}，それ以外は\alert{0}になる．
+\end{frame}
+
+%================================================
+\subsection{4.1.1.1. 線形モデル}
+\begin{frame}{4.1.1.1. 線形モデル：クラスごとにスコアを出す}
+入力が4次元，クラスが3種類なので，出力も3つ用意する．
+
+\[
+\begin{aligned}
+o_1 &= x_1 w_{11} + x_2 w_{12} + x_3 w_{13} + x_4 w_{14} + b_1,\\
+o_2 &= x_1 w_{21} + x_2 w_{22} + x_3 w_{23} + x_4 w_{24} + b_2,\\
+o_3 &= x_1 w_{31} + x_2 w_{32} + x_3 w_{33} + x_4 w_{34} + b_3.
+\end{aligned}
+\]
+
+\begin{center}
+  \includegraphics[width=0.7\linewidth]{linear_model.png}
+\end{center}
+
+\begin{itemize}
+  \item $w_{ij}$ は入力 $x_j$ がクラス $i$ に与える重み
+  \item $b_i$ はクラス $i$ のバイアス項
+  \item $o_i$ はクラス $i$ のスコア
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{線形モデルの行列表記}
+先ほどの式は，行列を使うと
+\[
+\begin{pmatrix}
+o_1\\
+o_2\\
+o_3
+\end{pmatrix}
+=
+\begin{pmatrix}
+w_{11} & w_{12} & w_{13} & w_{14}\\
+w_{21} & w_{22} & w_{23} & w_{24}\\
+w_{31} & w_{32} & w_{33} & w_{34}
+\end{pmatrix}
+\begin{pmatrix}
+x_1\\
+x_2\\
+x_3\\
+x_4
+\end{pmatrix}
++
+\begin{pmatrix}b_1\\
+b_2\\
+b_3
+\end{pmatrix}
+\]
+と書けるが，$b_i$を行列に組み込んで，
+\[
+\begin{pmatrix}
+o_1\\
+o_2\\
+o_3
+\end{pmatrix}
+=
+\begin{pmatrix}w_{11} & w_{12} & w_{13} & w_{14} & b_1\\
+w_{21} & w_{22} & w_{23} & w_{24} & b_2\\
+w_{31} & w_{32} & w_{33} & w_{34} & b_3
+\end{pmatrix}
+\begin{pmatrix}x_1\\
+x_2\\
+x_3\\
+x_4\\
+1
+\end{pmatrix}
+\]と表記することもある．
+\end{frame}
+
+%================================================
+\begin{frame}{なぜそのまま確率にできないのか}
+線形モデルの出力 $\mathbf{o}$ をそのまま確率とみなしたいが，問題がある．
+
+\begin{alertblock}{確率として必要な条件}
+\begin{itemize}
+  \item 各成分が非負である：$\hat{y}_i \geq 0$
+  \item 全クラスの和が1である：$\sum_i \hat{y}_i = 1$
+\end{itemize}
+($\hat{y}_i$ はクラス $i$ であると予測する確率)
+\end{alertblock}
+
+\vspace{1em}
+しかし，線形モデルの出力 $o_i$ は，
+\[
+  o_i < 0
+  \quad \text{や} \quad
+  \sum_i o_i \neq 1
+\]
+になりうる．
+
+\vspace{1em}
+\centering
+そこで，スコアを確率に変換する関数が必要になる．
+\end{frame}
+
+%================================================
+\subsection{4.1.1.2. ソフトマックス関数}
+\begin{frame}{ソフトマックス関数}
+確率ベクトルを $\hat{\mathbf{y}}$ と書くと，
+
+\[
+\hat{\mathbf{y}} = \mathrm{softmax}(\mathbf{o})
+\]
+となり，ソフトマックスは，スコア $\mathbf{o}$ を確率ベクトルに変換する．
+ここで，$\mathbf{P(y=i \mid \mathbf{x})} \propto \exp(o_i)$ として,
+
+\[
+\hat{y}_i
+=
+\frac{\exp(o_i)}
+{\sum_j \exp(o_j)}
+\]
+
+とソフトマックス関数を導入する．
+
+\vspace{1em}
+\begin{block}{ソフトマックス関数の特徴}
+\begin{itemize}
+  \item 指数関数により，すべての成分を正にする
+  \item 大きいスコアほど，大きい確率になる
+\end{itemize}
+\end{block}
+\end{frame}
+
+%================================================
+\begin{frame}{ソフトマックスのイメージ}
+例えば，線形モデルの出力が
+
+\[
+\mathbf{o} = (1.2,\ 0.3,\ 2.1)
+\]
+
+だったとする．
+
+ソフトマックスを通すと，
+\[
+\hat{\mathbf{y}}
+=
+\mathrm{softmax}(\mathbf{o})
+=
+(0.26,\ 0.11,\ 0.63)
+\]
+
+のように，確率として解釈できる値になる．
+
+
+\begin{alertblock}{予測クラス}
+最も確率が大きいクラスを選ぶ．
+\[
+\hat{y}_3 = 0.63
+\quad \Rightarrow \quad
+\text{dog}
+\]
+\end{alertblock}
+\end{frame}
+
+%================================================
+\begin{frame}{ソフトマックスは最大クラスを変えない}
+ソフトマックスはスコアを確率に変換するが，
+\alert{大小関係}は変えない．
+\[
+\operatorname*{argmax}_j \hat{y}_j
+=
+\operatorname*{argmax}_j o_j
+\]
+
+\vspace{1em}
+つまり，予測クラスだけを知りたいなら，
+
+\[
+\mathbf{o} = (1.2,\ 0.3,\ 2.1)
+\]
+
+の時点で，最大の成分 $o_3$ を選べばよい．
+
+\vspace{1em}
+\begin{block}{重要}
+ソフトマックスは「どのクラスが最大か」を変えずに，\\
+スコアを\alert{確率として解釈できる形}に変換する．
+\end{block}
+\end{frame}
+
+%================================================
+
+
+%================================================
+%================================================
+\begin{frame}{ソフトマックスとボルツマン分布}
+ソフトマックスは，統計力学に現れる
+\alert{ボルツマン分布}とよく似た形をしている．
+
+\vspace{0.5em}
+
+\begin{columns}[T]
+\column{0.48\textwidth}
+\begin{block}{ソフトマックス}
+
+\[
+\hat{y}_i
+=
+\frac{\exp(o_i)}
+{\sum_j \exp(o_j)}
+\]
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{ボルツマン分布}
+
+\[
+P(i)
+=
+\frac{\exp\left(-\frac{E_i}{k_{\mathrm{B}}T}\right)}
+{\sum_j \exp\left(-\frac{E_j}{k_{\mathrm{B}}T}\right)}
+\]
+\end{block}
+\end{columns}
+
+\vspace{1em}
+\centering
+どちらも「指数をとって，総和で割る」ことで\\
+\alert{確率分布}を作っている．
+以下，$\beta = 1/(k_{\mathrm{B}}T)$と置き，$\beta$は逆温度と呼ばれる．
+\end{frame}
+
+%================================================
+\begin{frame}{ボルツマン分布の意味}
+ボルツマン分布では，量子状態 $i$ が出現する確率を$P(i) \propto \exp(-\beta E_i)$ を仮定して，
+
+\[
+P(i)
+=
+\frac{1}{Z} \exp(-\beta E_i)
+\]
+と表す．ここで，分母は規格化定数で，
+\[
+Z
+=
+\sum_j \exp\left(- \beta E_j\right)
+\]
+であり、分配関数と呼ばれる．
+
+
+
+\begin{itemize}
+  \item $E_i$：状態 $i$ のエネルギー
+  \item $T$：温度
+  \item $k_{\mathrm{B}}$：ボルツマン定数
+  \item $Z$：分配関数
+\end{itemize}
+
+
+
+
+\end{frame}
+
+%================================================
+\begin{frame}{ソフトマックスとの対応関係}
+ソフトマックスでは，スコア $o_i$ が大きいクラスほど
+予測確率が大きくなる．
+
+\begin{columns}[T]
+\column{0.48\textwidth}
+\begin{block}{ソフトマックス}
+
+\[
+\hat{y}_i
+=
+\frac{\exp(o_i)}
+{\sum_j \exp(o_j)}
+\]
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{ボルツマン分布}
+
+\[
+P(i)
+=
+\frac{\exp\left(- \beta E_i\right)}
+{\sum_j \exp\left(- \beta E_j\right)}
+\]
+\end{block}
+\end{columns}
+
+ボルツマン分布と比較すると，
+
+\[
+o_i
+\quad \leftrightarrow \quad
+-\beta E_i
+\]
+
+と対応していると見なせる．
+\begin{itemize}
+  \item ソフトマックス：スコアが高いほど確率が大きい
+  \item ボルツマン分布：エネルギーが低いほど確率が大きい
+\end{itemize}
+\end{frame}
+
+%================================================
+\begin{frame}{分配関数の対応関係}
+\begin{columns}
+\column{0.48\textwidth}
+\begin{block}{ソフトマックスの分配関数}
+\[
+\sum_j \exp(o_j)
+\]
+\end{block}
+\column{0.48\textwidth}
+\begin{block}{ボルツマン分布の分配関数}
+\[
+Z
+=
+\sum_j \exp\left(- \beta E_j\right)
+\]
+\end{block}
+\end{columns}
+
+統計力学において，分配関数 $Z$ を求めることができれば，\\
+その系の熱力学のすべてがわかると言われる．
+\vspace{1em}
+
+    \begin{block}{自由エネルギー $F$}
+        \[
+            F = -\frac{1}{\beta} \ln Z
+        \]
+    \end{block}
+
+    \begin{itemize}
+        \item 分配関数 $Z$ を求めることができれば，これを微分するだけでエントロピーや内部エネルギーなど，\textbf{その系の熱力学のすべてがわかる}．
+    \end{itemize}
+\end{frame}
+
+
+%================================================
+\subsection{4.1.1.3. ベクトル化}
+\begin{frame}{4.1.1.3. ベクトル化}
+計算効率のため，1つのデータごとに計算するのではなく，
+$n$個の\alert{ミニバッチ}に対してまとめて計算する．
+\[
+\mathbf{X} \in \mathbb{R}^{n \times d},
+\quad
+\mathbf{W} \in \mathbb{R}^{d \times q},
+\quad
+\mathbf{b} \in \mathbb{R}^{1 \times q}
+\]
+
+\[
+\begin{aligned}
+\mathbf{O}
+&=
+\mathbf{X}\mathbf{W}
++
+\mathbf{b},
+\quad
+\mathbf{O} \in \mathbb{R}^{n \times q} \\
+\hat{\mathbf{Y}}
+&=
+\mathrm{softmax}(\mathbf{O})
+\end{aligned}
+\]
+
+\begin{columns}[T]
+\column{0.45\textwidth}
+\begin{itemize}
+  \item $n$：ミニバッチサイズ
+  \item $d$：入力特徴量の数
+  \item $q$：クラス数
+\end{itemize}
+
+\column{0.55\textwidth}
+\begin{d2lbox}{計算の流れ}
+\begin{enumerate}
+  \item $\mathbf{X}$ をまとめて線形変換
+  \item クラスごとのスコア $\mathbf{O}$ を出す
+  \item 各行に softmax をかける
+\end{enumerate}
+\end{d2lbox}
+\end{columns}
+
+
+\end{frame}
+
+%================================================
+\begin{frame}{ミニバッチを行列で表す}
+入力特徴量の数を $d$，ミニバッチサイズを $n$ とする．
+$n$ 個の入力データを縦に並べる．
+\[
+\mathbf{X}
+=
+\begin{pmatrix}
+- & (\mathbf{x}^{(1)})^\top & -\\
+  & \vdots & \\
+- & (\mathbf{x}^{(n)})^\top & -
+\end{pmatrix}
+\in \mathbb{R}^{n \times d}
+\]
+$\mathbf{X}$ の各行が，1つの入力データを表す．
+重み行列$\mathbf{W} \in \mathbb{R}^{d \times q}$を掛け，１つのデータに対するクラスごとの補正であるバイアス $\mathbf{b} \in \mathbb{R}^{1 \times q}$ を足すと，
+\[
+\mathbf{O}
+=
+\begin{pmatrix}
+- & (\mathbf{x}^{(1)})^\top \mathbf{W} & -\\
+  & \vdots & \\
+- & (\mathbf{x}^{(n)})^\top \mathbf{W} & -
+\end{pmatrix}
++
+\begin{pmatrix}
+- & \mathbf{b} & -\\
+  & \vdots & \\
+- & \mathbf{b} & -
+\end{pmatrix}
+\]
+スコア行列 $\mathbf{O} \in \mathbb{R}^{n \times q}$ を得る．
+このような自動的な拡張を\alert{ブロードキャスト}という．
+
+\end{frame}
+
+%================================================
+
+\begin{frame}{ベクトル化されたソフトマックス}
+線形モデルで得たスコア行列に対して，softmax をかける．
+\[
+\hat{\mathbf{Y}}
+=
+\mathrm{softmax}(\mathbf{O})
+\]
+\[
+\hat{Y}_{ij}
+=
+\frac{\exp(O_{ij})}
+{\sum_{k=1}^{q}\exp(O_{ik})}
+\]
+softmax は，\alert{各行ごと}に計算される．
+\[
+\hat{\mathbf{Y}}
+=
+\begin{pmatrix}
+\hat{y}^{(1)}_1 & \hat{y}^{(1)}_2 & \cdots & \hat{y}^{(1)}_q \\
+\hat{y}^{(2)}_1 & \hat{y}^{(2)}_2 & \cdots & \hat{y}^{(2)}_q \\
+\vdots & \vdots & \ddots & \vdots \\
+\hat{y}^{(n)}_1 & \hat{y}^{(n)}_2 & \cdots & \hat{y}^{(n)}_q
+\end{pmatrix}
+\in \mathbb{R}^{n \times q}
+\]
+$\hat{y}^{(i)}_j$ は，$i$ 番目のデータがクラス $j$ であると予測する確率を表し，各行の和は1になる．
+
+
+
+\end{frame}
+
+
+
+% =========================
+% 4.1.2 損失関数
+% =========================
+
+\subsection{4.1.2. 損失関数}
+\begin{frame}{4.1.2. 損失関数}
+ソフトマックス回帰では, モデルの出力を
+\alert{各クラスに属する確率}として解釈する.
+
+\[
+\hat{y}_j = \frac{\exp(o_j)}{\sum_{k=1}^{q} \exp(o_k)}
+\]
+
+\[
+\hat{\bm y}
+=
+(\hat y_1,\hat y_2,\dots,\hat y_q),
+\qquad
+\hat y_j
+=
+P(y=j\mid \bm x)
+\]
+
+\begin{d2lplainbox}
+損失関数は, \alert{正解クラスに高い確率を与えるほど小さくなる}ように作りたい.
+\end{d2lplainbox}
+
+\end{frame}
+
+%================================================
+
+\begin{frame}{4.1.2. 損失関数}
+\[
+\hat{\bm y}=(\hat y_{\mathrm{cat}},\hat y_{\mathrm{dog}},\hat y_{\mathrm{bird}}),
+\qquad
+\bm y=(0,1,0)
+\]
+
+ここでは, 正解クラスは\alert{犬}である.
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{d2lbox}{良い予測}
+\[
+\hat{\bm y}=(0.1,0.7,0.2)
+\]
+\[
+P(y=\mathrm{dog}\mid \bm x)=0.7
+\]
+正解クラスである犬に高い確率を与えている.
+\[
+\Rightarrow \text{損失は小さい}
+\]
+\end{d2lbox}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\begin{d2lbox}{悪い予測}
+\[
+\hat{\bm y}=(0.8,0.1,0.1)
+\]
+\[
+P(y=\mathrm{dog}\mid \bm x)=0.1
+\]
+正解クラスである犬に低い確率しか与えていない.
+\[
+\Rightarrow \text{損失は大きい}
+\]
+\end{d2lbox}
+\end{column}
+\end{columns}
+
+
+\end{frame}
+
+
+\begin{frame}{最尤推定から損失関数を作る}
+データセットを
+\[
+\{(\bm x^{(1)},y^{(1)}),\dots,(\bm x^{(n)},y^{(n)})\}
+\]
+とする.
+
+各データが独立にサンプリングされると仮定すると,
+データセット全体の条件付き確率は
+
+\[
+P(\bm Y\mid \bm X)
+=
+\prod_{i=1}^{n}
+P(y^{(i)}\mid \bm x^{(i)})
+\]
+
+と分解できる.
+
+\begin{d2lplainbox}
+この量を大きくすることは,
+観測された正解ラベルが最も起こりやすくなるように
+モデルを調整することに対応する.
+\end{d2lplainbox}
+\end{frame}
+
+\subsection{4.1.2.1. 対数尤度}
+\begin{frame}{負の対数尤度}
+尤度は積の形なので, そのままでは扱いにくい.
+そこで対数を取る.
+\[
+\log P(\bm Y\mid \bm X)
+=
+\log
+\prod_{i=1}^{n}
+P(y^{(i)}\mid \bm x^{(i)})
+=
+\sum_{i=1}^{n}
+\log P(y^{(i)}\mid \bm x^{(i)})
+\]
+尤度最大化は, 負の対数尤度最小化と同値である.
+\[
+-\log P(\bm Y\mid \bm X)
+=
+\sum_{i=1}^{n}
+-\log P(y^{(i)}\mid \bm x^{(i)})
+\]
+ここで$i$番目のデータ1つに対する損失を
+\[
+l(\bm y^{(i)},\hat{\bm y}^{(i)})
+=
+-\log P(y^{(i)}\mid \bm x^{(i)})
+\]
+と定義する．
+\end{frame}
+
+
+\begin{frame}{one-hot ラベルと交差エントロピー}
+正解が第 $k$ クラスであるとすると, one-hot ベクトルは
+\[\bm y=(0,\dots,0,1,0,\dots,0)
+\]
+となる. このとき
+\[
+  - \sum_{j=1}^{q} y_j \log \hat{y}_j
+  =
+  - \log \hat{y}_k
+\]
+となるので，
+\[
+\boxed{
+l(\bm y,\hat{\bm y})
+=
+-\sum_{j=1}^{q}
+y_j\log \hat y_j
+}
+\]
+となる．この損失関数は\alert{交差エントロピー損失}と呼ばれる．
+
+\end{frame}
+
+%================================================
+
+\begin{frame}[t]{具体例: 正解クラスの確率と交差エントロピー損失}
+正解ラベルが第2クラスであるとする．
+\[
+\bm y=(0,1,0)
+\]
+\vspace{-8mm}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.55\textwidth}
+\begin{d2lbox}{良い予測}
+\[
+\hat{\bm y}=(0.1,0.7,0.2)
+\]
+正解クラスの確率：$\hat y_2=0.7$ \\
+このときの損失は
+\[
+\begin{split}
+&l(\bm{y},\hat{\bm{y}})
+= - \sum_{j=1}^{3} y_j \log \hat{y}_j = - (0\log 0.1 \\
+&+ 1\log 0.7 + 0\log 0.2) \approx 0.357
+\end{split}
+\]
+\[
+\Rightarrow \text{損失は小さい}
+\]
+\end{d2lbox}
+\end{column}
+
+\begin{column}{0.4\textwidth}
+\begin{d2lbox}{悪い予測}
+\[
+\hat{\bm y}=(0.8,0.1,0.1)
+\]
+\[
+\hat y_2=0.1
+\]
+損失は
+\[
+l(\bm y,\hat{\bm y})
+=
+-\log 0.1
+\approx 2.303
+\]
+\[
+\Rightarrow \text{損失は大きい}
+\]
+\end{d2lbox}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%================================================
+\subsection{4.1.2.2. ソフトマックスと交差エントロピー損失}
+\begin{frame}{4.1.2.2. ソフトマックスと交差エントロピー損失}
+ソフトマックス回帰では, ロジット $\bm o$ を確率に変換する.
+
+\[
+\hat y_j
+=
+\operatorname{softmax}(\bm o)_j
+=
+\frac{\exp(o_j)}
+{\sum_{k=1}^{q}\exp(o_k)}
+\]
+
+交差エントロピー損失は
+
+\[
+l(\bm y,\hat{\bm y})
+=
+-\sum_{j=1}^{q}y_j\log \hat y_j
+\]
+
+であった.
+
+\begin{d2lplainbox}
+ここでは, この2つを組み合わせると何が起こるかを見る.
+特に, 勾配が非常に簡単な形になる.
+\end{d2lplainbox}
+\end{frame}
+
+
+\begin{frame}{交差エントロピーにソフトマックスを代入する}
+交差エントロピー損失：$
+l(\bm y,\hat{\bm y})
+=
+-\sum_{j=1}^{q}y_j\log \hat y_j
+$
+に
+
+$
+\hat y_j
+=
+\frac{\exp(o_j)}
+{\sum_{k=1}^{q}\exp(o_k)}
+$
+を代入して$\sum_{j=1}^{q}y_j=1$を使うと,
+{\small
+\[
+\begin{aligned}
+  l(\bm y,\hat{\bm y})
+&=
+-\sum_{j=1}^{q}
+y_j
+\log
+\frac{\exp(o_j)}
+{\sum_{k=1}^{q}\exp(o_k)}
+= 
+-\sum_{j=1}^{q}
+y_j
+\left(
+o_j
+-
+\log\sum_{k=1}^{q}\exp(o_k)
+\right) \\
+&= \sum_{j=1}^{q}
+y_j
+\log\sum_{k=1}^{q}\exp(o_k)
+-
+\sum_{j=1}^{q}y_j o_j
+=
+\log\sum_{k=1}^{q}\exp(o_k)
+-
+\sum_{j=1}^{q}y_j o_j 
+\end{aligned}
+\]}
+となる．
+任意のロジット$o_j$に対して勾配を取る．
+{\small
+\[
+\begin{aligned}
+  \frac{\partial}{\partial o_j} l(\bm y,\hat{\bm y})
+&=
+\frac{\partial}{\partial o_j}
+\log\sum_{k=1}^{q}\exp(o_k)
+-
+\frac{\partial}{\partial o_j}\sum_{k=1}^{q}y_k o_k \\
+&= \frac{\exp(o_j)}
+{\sum_{k=1}^{q}\exp(o_k)}
+-
+y_j 
+= \mathrm{softmax}(\bm o)_j - y_j \\
+&= \hat y_j - y_j
+\end{aligned}
+\]}
+
+\end{frame}
+%================================================
+
+
+\begin{frame}{勾配の意味}
+\[
+\boxed{
+\frac{\partial l}{\partial o_j}
+=
+\hat y_j-y_j
+}
+\]
+つまり, 勾配は「$\text{予測確率} - \text{正解ラベル}$」である. \\
+例：$\bm y = (0,1,0)$ 
+\small{
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{d2lbox}{良い予測}
+\[
+\hat{\bm y}=(0.1,0.7,0.2)
+\]
+\[\hat{\bm y}-\bm y
+=
+(0.1,-0.3,0.2)
+\]
+正解クラスの修正は小さい.
+\end{d2lbox}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\begin{d2lbox}{悪い予測}
+\[
+\hat{\bm y}=(0.8,0.1,0.1)
+\]
+\[\hat{\bm y}-\bm y
+=
+(0.8,-0.9,0.1)
+\]
+ 強く修正される.
+\end{d2lbox}
+\end{column}
+\end{columns}}
+\[
+\text{勾配降下法：}\quad \bm{o} \leftarrow \bm{o} - \eta \frac{\partial l}{\partial \bm{o}}
+\]
+\begin{d2lplainbox}
+  正解クラスのスコアを上げ，不正解のスコアを下げるように更新
+\end{d2lplainbox}
+
+\end{frame}
+%================================================
+
+\subsection{4.1.3. 情報理論の基礎}
+\begin{frame}{情報量: 驚きの大きさ}
+情報理論では, 事象が起きたときの\alert{驚きの大きさ}を
+情報量として考える.
+\[
+\text{情報量}
+=
+\text{驚きの大きさ}
+\]
+事象 $j$ が起こる確率を $P(j)$ とすると, その情報量を
+\[
+\boxed{
+I(j)
+\coloneqq
+-\log P(j)
+}
+\]
+と定義する.
+\begin{d2lplainbox}
+まれな事象は貴重なサンプルとなり情報量は大きい．
+\[
+\text{確率が低い} \Leftrightarrow \text{情報量が大きい}
+\]
+\end{d2lplainbox}
+\end{frame}
+%================================================
+
+\subsection{4.1.3.1. 情報エントロピー}
+\begin{frame}{情報エントロピー: 情報量の期待値}
+分布 $P$ に従って事象 $j$ が起こるとする.
+各事象の情報量は
+\[
+I(j)=-\log P(j)
+\]
+である.
+したがって, 平均的な情報量は期待値として
+\[
+\mathbb{E}_{j\sim P}[I(j)]
+=
+\sum_j P(j)I(j)
+\]
+と書ける.これを\alert{情報エントロピー}という．
+\[
+\boxed{
+\begin{aligned}
+H[P]
+&=
+\sum_j P(j)(-\log P(j)) \\
+&=
+-\sum_j P(j)\log P(j)
+\end{aligned}
+}
+\]
+
+\end{frame}
+
+%================================================
+\subsection{4.1.3.3. 交差エントロピーの再考}
+\begin{frame}{4.1.3.3. 交差エントロピーの再考}
+真の分布を $P$, モデルの予測分布を $Q$ として交差エントロピーを定義する．
+\[
+H(P,Q)
+\coloneqq
+-\sum_j P(j)\log Q(j)
+\]
+分類の交差エントロピー損失は$
+P(j)=y_j,
+\quad
+Q(j)=\hat y_j
+$
+で対応．
+\[
+H(P,Q)
+=
+-\sum_{j=1}^{q}y_j\log\hat y_j
+=
+l(\bm y,\hat{\bm y})
+\]
+\begin{d2lplainbox}
+交差エントロピー損失は,
+真の分布$P$に従って起こる事象を，予測分布$Q$で説明するときの
+平均的情報量である．
+\end{d2lplainbox}
+予測分布 $Q$ が真の分布 $P$ に近いほど小さくなる.つまり$Q=P$
+のとき, 交差エントロピーは最小になる．
+\[
+H(P,Q)=H(P,P)=H(P)
+\]
+\end{frame}
+
+
+%================================================
+\section{4.2. 画像分類データセットと実践}
+\subsection{4.2.1. データセットの読み込み}
+\begin{frame}{4.2. 画像分類データセット}
+この節では，画像分類の実験に用いる
+\alert{Fashion-MNIST} を準備する．
+
+\begin{d2lbox}{この節の位置づけ}
+\begin{itemize}
+  \item モデルの理論ではなく，データの準備を扱う
+  \item 画像とラベルの組を読み込む
+  \item ミニバッチとしてモデルに入力できる形にする
+\end{itemize}
+\end{d2lbox}
+
+以降のソフトマックス回帰では，このデータを使って分類を行う．
+
+\centering
+\large
+データセット $\longrightarrow$ ミニバッチ $\longrightarrow$ 分類モデル
+\end{frame}
+
+\begin{frame}{Fashion-MNISTとは}
+\key{Fashion-MNIST}は，衣類画像を10クラスに分類するデータセットである．
+
+\vspace{-1.5em}
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.52\textwidth}
+\begin{d2lbox}{特徴}
+\begin{itemize}
+  \item 学習データ：$60000$ 枚
+  \item テストデータ：$10000$ 枚
+  \item クラス数：$10$
+  \item 画像サイズ：$28 \times 28$
+  \item 白黒画像なのでチャネル数は $1$
+\end{itemize}
+\end{d2lbox}
+\end{column}
+\begin{column}{0.44\textwidth}
+\begin{d2lplainbox}
+\small
+\begin{center}
+\begin{tabular}{c|c}
+ラベル & クラス名 \\ \hline
+0 & t-shirt \\
+1 & trouser \\
+2 & pullover \\
+3 & dress \\
+4 & coat \\
+5 & sandal \\
+6 & shirt \\
+7 & sneaker \\
+8 & bag \\
+9 & ankle boot
+\end{tabular}
+\end{center}
+\end{d2lplainbox}
+\end{column}
+\end{columns}
+\[
+\text{画像 } \bm{x}
+\quad \longrightarrow \quad
+\text{ラベル } y \in \{0,1,\dots,9\}
+\]
+\end{frame}
+
+\begin{frame}[fragile]{PyTorchでデータセットを読み込む}
+PyTorch では，\texttt{torchvision.datasets} を用いて
+Fashion-MNIST を読み込める．
+\begin{lstlisting}
+class FashionMNIST(d2l.DataModule):  #@save
+    """The Fashion-MNIST dataset."""
+    def __init__(self, batch_size=64, resize=(28, 28)):
+        super().__init__()
+        self.save_hyperparameters()
+        trans = transforms.Compose([transforms.Resize(resize),
+                                    transforms.ToTensor()])
+        self.train = torchvision.datasets.FashionMNIST(
+            root=self.root, train=True, transform=trans, download=True)
+        self.val = torchvision.datasets.FashionMNIST(
+            root=self.root, train=False, transform=trans, download=True)
+
+\end{lstlisting}
+\begin{itemize}
+  \item \texttt{train=True}: 学習用データを使う
+  \item \texttt{train=False}: 評価用データ,検証用データを使う
+  \item \texttt{ToTensor()}: 画像を数値テンソルに変換
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{テンソルの形の意味}
+1枚の画像の形は，
+\begin{lstlisting}
+data.train[0][0].shape
+
+# torch.Size([1, 32, 32])
+\end{lstlisting}
+
+\begin{d2lbox}{画像テンソルの形}
+\[
+\text{image} \in \mathbb{R}^{c \times h \times w}
+\]
+\[
+\shape{[1, 32, 32]}
+=
+\texttt{[channel 1, height 32, width 32]}
+\]
+$32 \times 32$ の白黒画像なので，チャネル数は $1$ である．
+\end{d2lbox}
+\begin{alertblock}{注意}
+元画像は$28\times 28$だが，ここではD2Lに合わせて$32\times32$にリサイズしている．
+\end{alertblock}
+
+\end{frame}
+
+\subsection{4.2.2 ミニバッチの読み込み}
+\begin{frame}[fragile]{4.2.2 ミニバッチの読み込み}
+学習では，複数枚をまとめた\key{ミニバッチ}で処理する．
+\begin{lstlisting}
+@d2l.add_to_class(FashionMNIST)  #@save
+def get_dataloader(self, train):
+    data = self.train if train else self.val
+    return torch.utils.data.DataLoader(data, self.batch_size, shuffle=train,
+                                       num_workers=self.num_workers)
+X, y = next(iter(data.train_dataloader()))
+print(X.shape, X.dtype, y.shape, y.dtype)
+
+# torch.Size([64, 1, 32, 32]) torch.float32 torch.Size([64]) torch.int64
+\end{lstlisting}
+\vspace{-1em}
+\begin{d2lplainbox}
+  ミニバッチの形状：$n=64$, $c=1$, $h=w=32$
+\[
+\bm{X} \in \mathbb{R}^{n \times c \times h \times w}
+\]
+テンソルの形：$\texttt{[batch size, channel, height, width]}$
+$32 \times 32$ の白黒画像を64枚まとめている．
+\end{d2lplainbox}
+\end{frame}
+
+\subsection{4.2.3 画像の可視化}
+\begin{frame}[fragile]{4.2.3 画像の可視化}
+データが正しく読み込めているかを確認するために，
+画像を表示する．
+\begin{lstlisting}
+@d2l.add_to_class(FashionMNIST)
+def visualize(self, batch, nrows=1, ncols=8, labels=[]):
+    X, y = batch
+    if not labels:
+        labels = self.text_labels(y)
+    d2l.show_images(X.squeeze(1), nrows, ncols,
+                    titles=labels)
+\end{lstlisting}
+
+画像とラベルが対応しているか，リサイズやテンソル変換が意図通りかを確認する．
+\end{frame}
+
+\subsection{4.2.4. まとめ}
+\begin{frame}{4.2節のまとめ}
+\begin{d2lbox}{この節の要点}
+\begin{itemize}
+  \item Fashion-MNISTは10クラスの衣類画像分類データセットである．
+  \item PyTorchでは\texttt{torchvision.datasets.FashionMNIST}で読み込める．
+  \item 画像は\shape{[チャネル数, 高さ, 幅]}のテンソルとして扱う．
+  \item ミニバッチでは\shape{[バッチサイズ, チャネル数, 高さ, 幅]}になる．
+  \item \texttt{DataLoader}は，シャッフル・ミニバッチ化・並列読み込みを担う．
+\end{itemize}
+\end{d2lbox}
+\end{frame}
+
+\section{4.3. 分類の基礎モデル}
+
+\begin{frame}{4.3. 分類の基礎モデル}
+\begin{d2lbox}{この節でやること}
+分類問題で何度も使う処理を，共通の部品としてまとめる．
+\end{d2lbox}
+
+\vspace{3mm}
+
+分類モデルでは，毎回ほぼ同じ流れが現れる：
+\[
+\text{入力 } \bm X
+\longrightarrow
+\text{モデル}
+\longrightarrow
+\text{予測 } \hat{\bm Y}
+\longrightarrow
+\text{損失・精度の計算}
+\]
+
+\vspace{3mm}
+
+\begin{itemize}
+  \item \alert{損失}：学習のために最小化する量
+  \item \alert{精度}：分類器がどれくらい正解したかを表す指標
+\end{itemize}
+
+\vspace{2mm}
+
+\[
+\mathrm{accuracy}
+=
+\frac{\text{正解したデータ数}}{\text{全データ数}}
+\]
+\end{frame}
+
+\subsection{4.3.1. Classifier クラス}
+\begin{frame}[fragile]{4.3.1. \texttt{Classifier} クラス}
+分類モデル用の基底クラスを用意する．
+
+\vspace{2mm}
+
+\begin{lstlisting}
+class Classifier(d2l.Module):  #@save
+    """分類モデルの基底クラス。"""
+    def validation_step(self, batch):
+        Y_hat = self(*batch[:-1])
+        self.plot('loss', self.loss(Y_hat, batch[-1]), train=False)
+        self.plot('acc', self.accuracy(Y_hat, batch[-1]), train=False)
+\end{lstlisting}
+\begin{d2lplainbox}
+検証データに対して，
+\[
+\text{予測}
+\rightarrow
+\text{損失の計算}
+\rightarrow
+\text{精度の計算}
+\]
+をまとめて行う．
+\end{d2lplainbox}
+\end{frame}
+
+\subsection{4.3.2. 精度}
+\begin{frame}{4.3.2. 精度 accuracy}
+分類では，予測確率またはスコアから，最終的に1つのクラスを選ぶ．
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.6cm,>=Latex]
+  \node[draw,rounded corners,fill=blue!6,minimum width=2.5cm,minimum height=0.8cm] (score) {予測スコア $\hat{\bm y}$};
+  \node[draw,rounded corners,fill=green!6,minimum width=2.5cm,minimum height=0.8cm,right=of score] (pred) {予測クラス $\hat y$};
+  \node[draw,rounded corners,fill=orange!8,minimum width=2.5cm,minimum height=0.8cm,right=of pred] (acc) {正解と比較};
+  \draw[->,thick] (score) -- node[above]{\small $\arg\max$} (pred);
+  \draw[->,thick] (pred) -- node[above]{\small $\hat y = y$ ?} (acc);
+\end{tikzpicture}
+\end{center}
+\begin{d2lbox}{分類精度}
+\[
+\mathrm{accuracy}
+=
+\frac{\text{正しく分類できたデータ数}}{\text{全データ数}}
+\]
+\end{d2lbox}
+これを数式で書くと，
+\[
+\mathrm{accuracy}
+=
+\frac{1}{n}
+\sum_{i=1}^{n}
+\bm{1}(\hat y_i = y_i)
+\]
+ここで
+\vspace{-0.5em}
+{\small
+\[
+\bm{1}(\hat y_i = y_i)
+=
+\begin{cases}
+1 \quad ( \hat y_i = y_i) \\
+0  \quad ( \hat y_i \neq y_i)
+\end{cases}
+\]
+}
+
+\end{frame}
+
+\begin{frame}[fragile]{精度の計算：D2Lの実装}
+各データについて，最大スコアのクラスを予測クラスとする．
+
+\begin{lstlisting}
+@d2l.add_to_class(Classifier)  #@save
+def accuracy(self, Y_hat, Y, averaged=True):
+    """正しい予測の数を計算する。"""
+    Y_hat = d2l.reshape(Y_hat, (-1, Y_hat.shape[-1]))
+    preds = d2l.astype(d2l.argmax(Y_hat, axis=1), Y.dtype)
+    compare = d2l.astype(preds == d2l.reshape(Y, -1), d2l.float32)
+    return d2l.reduce_mean(compare) if averaged else compare
+\end{lstlisting}
+
+\begin{d2lbox}{流れ}
+\[
+\hat{Y} \in \mathbb{R}^{n\times q}
+\quad\xrightarrow{\arg\max}\quad
+\hat{y}_1,\ldots,\hat{y}_n
+\quad\xrightarrow{\hat{y}_i=y_i}\quad
+0/1
+\]
+\end{d2lbox}
+
+\begin{itemize}
+  \item \code{averaged=True}: 正解率の平均を返す
+  \item \code{averaged=False}: 各データの正誤を0/1で返す
+\end{itemize}
+\end{frame}
+
+\subsection{4.3.3 まとめ}
+\begin{frame}{まとめ}
+\begin{d2lbox}{4.3 の要点}
+分類モデルでは，予測結果を評価するために
+\alert{精度 accuracy} を計算する．
+\end{d2lbox}
+\begin{itemize}
+  \item \texttt{Classifier} クラスは分類モデルの共通処理をまとめる
+  \item 検証時には，損失 \texttt{loss} と精度 \texttt{acc} を記録する
+  \item 予測クラスは
+  \[
+  \operatorname*{argmax}_{j}\hat y_j
+  \]
+  で決める
+  \item 精度は
+  \[
+  \frac{\text{正解数}}{\text{全データ数}}
+  \]
+  である
+\end{itemize}
+次節では，この仕組みを使ってソフトマックス回帰を実装する．
+\end{frame}
+
+\end{document}
