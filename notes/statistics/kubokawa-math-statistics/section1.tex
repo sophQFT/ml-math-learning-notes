@@ -1,0 +1,107 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{統計量・標本分布と推定量}
+
+\subsection{統計量と標本分布}
+
+\begin{mydefinition}{無作為標本(random sample)}
+\label{def:random_sample} % ラベルを付けて後から参照できるようにする
+標本$X_1, \dots , X_n$が互いに独立に同一の分布$F$に従っているとき，$X_1, \dots,X_n$を母集団分布$F$から抽出された大きさ$n$の無作為標本という．
+\end{mydefinition}
+
+$F$の関数系が正規分布のように特定できる設定を\textbf{\hypertarget{def:parametric}{パラメトリック}}といい，
+関数系を特定しない設定を\textbf{\hypertarget{def:nonparametric}{ノンパラメトリック}}という．
+標本$X_1,\dots,X_n$の関数$T=T(X_1,\dots,X_n)$で未知なものを含まないものを\textbf{\hypertarget{def:statistic}{統計量}}(statistic)といい，$T$の確率分布を\textbf{標本分布}(sampling distribution)という．以下の節で説明する標本平均，標本分散，順序統計量，十分統計量は代表的な統計量である．
+
+\subsection{推定量と不偏性}
+\hyperlink{def:parametric}{パラメトリック}なモデルの場合，$N(\mu, \sigma^2)$の$\mu, \sigma^2$や$Ber(p)$の$p$などの分布を特徴づける定数を\textbf{\hypertarget{def:parameter}{母数}}(parameter)といい，未知の場合は標本から推定する．一般に母数を$\theta$で表すとき，$\theta$を推定するにはr.v.\quad$X_1, \dots, X_n$の関数で$\hat{\theta} = \hat{\theta}(X_1, \dots, X_n)$と書ける．この$\hat{\theta}$を\textbf{\hypertarget{def:estimator}{推定量}}(estimator)と呼ぶ．また，$\theta$が取りうる値全体からなる集合を$\Theta$で表し，\textbf{パラメータ空間}(parameter space)という．
+
+\begin{mydefinition}{不偏性(unbiasedness)}
+\label{def:unbiasedness} % ラベルを付けて後から参照できるようにする
+  任意の$\theta \in \Theta$に対して
+  \begin{equation}
+    E[\hat{\theta}] = \theta
+  \end{equation}
+  が成り立つとき，\hyperlink{def:estimator}{推定量}$\hat{\theta}$は$\theta$の\textbf{不偏推定量}(unbiased estimator)であるという．
+\end{mydefinition}
+
+\subsection{標本平均，標本分散，不偏分散}
+母集団の平均$\mu$や分散$\sigma^2$を\textbf{母平均}(population mean)，\textbf{母分散}(population variance)という．\hyperlink{def:parameter}{母数}は標本$X_1, \dots, X_n$から推定されて，母平均$\mu$の\hyperlink{def:estimator}{推定量}として\textbf{標本平均}(sample mean)
+\begin{equation}
+  \bar{X} = \frac{1}{n} \sum_{i=1}^{n} X_i
+\end{equation}
+が定義され，母分散$\sigma^2$の\hyperlink{def:estimator}{推定量}として\textbf{標本分散}(sample variance)
+\begin{equation}
+  S^2 = \frac{1}{n} \sum_{i=1}^{n} (X_i - \bar{X})^2
+\end{equation}
+が定義される．
+
+平均 $\mu$, 分散 $\sigma^2$ の確率分布を母集団とする\hyperref[def:random_sample]{無作為標本}がとられているとする．これを
+\begin{equation}
+    X_1, \dots, X_n, \quad \text{i.i.d.} \sim (\mu, \sigma^2)
+    \label{eq:random_sample_general}
+\end{equation}
+と書く．このとき，標本平均$\bar{X}$は$\mu$の\hyperlink{def:estimator}{推定量}であり，不偏性を持つことが知られている．
+
+\begin{myexample}{\hyperlink{def:parameter}{母数}$\theta$が母平均$\mu$の場合($\theta=\mu$)}
+\label{ex:unbiased_sample_mean} % ラベルを付けて後から参照できるようにする
+  $\theta=\mu$を推定するために，標本平均$\bar{X}$を\hyperlink{def:estimator}{推定量}$\hat{\theta}$として用いる．すなわち，
+  \begin{equation}
+    \hat{\theta} (X_1, \dots, X_n) = \bar{X} = \frac{1}{n} \sum_{i=1}^{n} X_i
+  \end{equation}
+とする．$E[X_i] = \mu$,$\Var(X_i) = \sigma^2$であるので，
+\begin{equation}
+  E[\hat{\theta}] = E[\bar{X}] =  \frac{1}{n} \sum_{i=1}^{n} E[X_i]  = \mu 
+\end{equation}
+と推定量の期待値が母数$\theta=\mu$に一致する．
+\textbf{定義 \ref{def:unbiasedness}}より，標本平均$\bar{X}$は母平均$\mu$の\hyperref[def:unbiasedness]{不偏推定量}である．
+\end{myexample}
+標本平均$\bar{X}$の分散は
+\begin{equation}
+  \Var(\bar{X}) = \Var\ab(\frac{1}{n} \sum_{i=1}^{n} X_i) = \frac{1}{n^2}  \Var\ab(\sum_{i=1}^{n}X_i) = \frac{\sigma^2}{n}
+\end{equation}
+となる．\footnote{二変数の場合では$\Var(aX+bY) = a^2\Var(X) + b^2\Var(Y) + 2ab\Cov(X,Y)$が成り立ち，$X \indep Y$ならば$\Cov(X,Y)=0$である．}
+
+\begin{myexample}{\hyperlink{def:parameter}{母数}$\theta$が母分散$\sigma^2$の場合($\theta=\sigma^2$)}
+\label{ex:unbiased_sample_variance} % ラベルを付けて後から参照できるようにする
+  $\theta=\sigma^2$を推定するために，標本分散$S^2$を\hyperlink{def:estimator}{推定量}$\hat{\theta}$として用いる．すなわち，
+  \begin{equation}
+    \hat{\theta} (X_1, \dots, X_n) = S^2 = \frac{1}{n} \sum_{i=1}^{n} (X_i - \bar{X})^2
+  \end{equation}
+とする．$E[\hat{\theta}]=E[S^2]=\frac{1}{n}  E\ab[\sum_{i=1}^{n}(X_i - \bar{X})^2]$を計算する．ここで
+\begin{equation}
+  \sum_{i=1}^{n} (X_i - \bar{X})^2 = \sum_{i} X_i^2 -2 \bar{X} \sum_{i} X_i + n \bar{X}^2  = \sum_{i=1}^{n} X_i^2 - n\bar{X}^2
+\end{equation}
+であるので，
+\begin{equation}
+  E \ab[\textstyle \sum_{i} (X_i - \bar{X})^2] = \sum_{i} E[X_i^2] - n E[\bar{X}^2]
+  \label{eq:ex_unbiased_sample_variance_1}
+\end{equation}
+となる．また，
+\begin{equation}
+  \begin{split}
+  \Var(X_i) &= E \ab[(X_i - \mu)^2] = E[X_i^2] - \mu^2 = \sigma^2 \\
+  \Var(\bar{X}) &= E \ab[(\bar{X} - \mu)^2] = E[\bar{X}^2] - \mu^2 = \frac{\sigma^2}{n}
+  \end{split}
+\end{equation}
+を用いると，\eqref{eq:ex_unbiased_sample_variance_1}は
+\begin{equation}
+  E \ab[\textstyle \sum_{i} (X_i - \bar{X})^2] = n(\sigma^2 + \mu^2) - n\ab(\frac{\sigma^2}{n} + \mu^2) = (n-1)\sigma^2
+  \label{eq:ex_unbiased_sample_variance_2}
+\end{equation}
+となる．したがって，
+\begin{equation}
+  E[\hat{\theta}] = E[S^2] = \frac{1}{n} E \ab[\textstyle \sum_{i} (X_i - \bar{X})^2] = \frac{n-1}{n} \sigma^2
+\end{equation}
+と\hyperlink{def:estimator}{推定量}$S^2$の期待値は母数$\theta=\sigma^2$に一致しない．
+\textbf{定義 \ref{def:unbiasedness}}より，標本分散$S^2$は母分散$\sigma^2$の\hyperref[def:unbiasedness]{不偏推定量}ではない．期待値が$\sigma^2$になるには\eqref{eq:ex_unbiased_sample_variance_2}から推定量$V^2$を
+\begin{equation}
+  V^2 = \frac{n}{n-1} S^2 = \frac{1}{n-1} \sum_{i=1}^{n} (X_i - \bar{X})^2
+\end{equation}
+と定義すればよい．このとき，\textbf{定義\ref{def:unbiasedness}}より，$V^2$は母分散$\sigma^2$の\hyperref[def:unbiasedness]{不偏推定量}である．
+この$V^2$を\textbf{不偏分散}(unbiased variance)という．
+\end{myexample}
+
+\end{document}

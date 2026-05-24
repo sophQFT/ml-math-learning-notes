@@ -1,0 +1,173 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{標本平均・標本分散の独立性と$t$分布}
+
+\subsection{標本平均と標本分散の独立性}
+
+平均 $\mu$, 分散 $\sigma^2$ の正規分布に従う母集団（正規母集団）から，\hyperref[def:random_sample]{無作為標本}がとられているとする．無作為抽出とはr.v. $X_1, \dots, X_n$が独立であると言い換えることができる．すなわち，
+\begin{equation}
+    X_1, \dots, X_n, \quad \text{i.i.d.} \sim N(\mu, \sigma^2)
+    \label{eq:random_sample}
+\end{equation}
+ここで，
+\begin{equation}
+  標本平均： \bar{X} = \frac{1}{n}\sum_{i=1}^{n} X_i, \quad 不偏分散： V^2 = \frac{1}{n-1}\sum_{i=1}^{n} (X_i - \bar{X})^2
+\end{equation}
+について次の定理が成り立つ．
+
+\begin{mytheorem}[thm:principal]{正規母集団からの無作為標本}
+$X_1, \dots, X_n$ を正規母集団 $N(\mu, \sigma^2)$ からの無作為標本とする．このとき，次が成り立つ．
+\begin{enumerate}[label=(\arabic*)]
+    \item 標本平均 $\bar{X}$ と標本不偏分散 $V^2$ は独立に分布する．
+    \item $\bar{X} \sim N(\mu, \sigma^2/n)$
+    \item $\frac{(n-1)V^2}{\sigma^2} \sim \chi^2_{n-1}$
+\end{enumerate}
+\end{mytheorem}
+
+\begin{proof}
+ 
+ \eqref{eq:random_sample}から，
+  \begin{equation}
+    Z_i = \frac{X_i - \mu}{\sigma}
+    \label{eq:standardization}
+  \end{equation}
+  と変換したr.v. $Z_1, \dots, Z_n$ は i.i.d. $N(0,1)$ に従う．ここで，標準化した標本平均を，$\bar{Z}=\frac{1}{n}\sum_{i=1}^{n} Z_i$ とおくと，
+  \begin{equation}
+    \bar{Z} = \frac{1}{n} \sum_{i=1}^{n} Z_i = \frac{1}{n\sigma} \sum_{i=n}^{n}(X_i - \mu) = \frac{1}{\sigma}(\bar{X}-\mu)
+    \label{eq:standardized_sample_mean}
+  \end{equation}
+  となる．\eqref{eq:standardized_sample_mean}を変形すると，
+  \begin{equation}
+    \sqrt{n} \bar{Z} = \frac{\bar{X}-\mu}{\sigma/\sqrt{n}}
+    \label{eq:standardized_sample_mean2}
+  \end{equation}
+  となる．これは，(2)の主張が成り立つなら，$\bar{X} \sim N(\mu, \sigma^2/n)$ を標準化して，$\frac{\bar{X}-\mu}{\sigma/\sqrt{n}} \sim N(0,1)$ 
+  となることと同値である．つまり，(2)は，$\sqrt{n} \bar{Z} \sim N(0,1)$ と書き直せる．
+
+  また，\eqref{eq:standardization},\quad \eqref{eq:standardized_sample_mean}より，
+  \begin{equation}
+    X_i - \bar{X} = (\sigma Z_i + \mu) - (\sigma \bar{Z} + \mu) =\sigma(Z_i - \bar{Z})
+  \end{equation}
+  であるから，不偏分散$V^2$は
+  \begin{equation}
+    V^2 = \frac{1}{n-1} \sum_{i=1}^{n} (X_i - \bar{X})^2 = \frac{\sigma^2}{n-1} \sum_{i=1}^{n} (Z_i - \bar{Z})^2
+    \label{eq:unbiased_sample_variance}
+  \end{equation}
+  と書ける．これを(3)の主張に代入すると，
+  \begin{equation}
+    \frac{(n-1)V^2}{\sigma^2} = \sum_{i=1}^{n} (Z_i - \bar{Z})^2
+  \end{equation}
+  となる．すなわち(3)の主張は，$\sum_{i=1}^{n} (Z_i - \bar{Z})^2 \sim \chi^2_{n-1}$であることと同値である．
+
+  さらに，\eqref{eq:standardized_sample_mean},\quad \eqref{eq:unbiased_sample_variance}より，
+  \begin{equation*}
+    \bar{X} = \sigma \bar{Z} + \mu, \quad V^2 = \frac{\sigma^2}{n-1} \sum_{i=1}^{n} (Z_i - \bar{Z})^2
+  \end{equation*}
+  だったので，(1)の主張は，$\bar{Z}$ と $\sum_{i=1}^{n} (Z_i - \bar{Z})^2$ の独立性と同値である．以上から，定理の(1),(2),(3)は，それぞれ
+  \begin{bluebox}
+  \begin{enumerate}[label=(\arabic*')]
+    \item $\bar{Z}$ と $\sum_{i=1}^{n} (Z_i - \bar{Z})^2$ は独立に分布する．
+    \item $\sqrt{n}\bar{Z} \sim N(0,1)$
+    \item $\sum_{i=1}^{n} (Z_i - \bar{Z})^2 \sim \chi^2_{n-1}$
+  \end{enumerate}
+\end{bluebox}
+  と書き直す事ができる．
+  そこで，$Z_1, \dots, Z_n$ が i.i.d. $N(0,1)$ に従うことから，(1'),(2'),(3')を示す．
+
+  まず，$Z=(Z_1, \dots, Z_n)^T$ から$Y=(Y_1, \dots, Y_n)^T$ への変換$Y=HZ$を考える．
+  ここで，$H \in \mathrm{GL}(n,\R)$ は以下のような直交行列である．
+  \begin{equation}
+    H = \begin{pmatrix}
+      \frac{1}{\sqrt{n}} & \frac{1}{\sqrt{n}} & \frac{1}{\sqrt{n}} & & \cdots & \frac{1}{\sqrt{n}} \\
+      \frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} & 0 &  & \cdots & 0 \\
+      \frac{1}{\sqrt{2\cdot 3}} & \frac{1}{\sqrt{2\cdot 3}} & -\frac{2}{\sqrt{2\cdot 3}} &  0  & \cdots & 0 \\
+      \vdots & \vdots & \vdots & \ddots & \ddots & \vdots \\
+      \frac{1}{\sqrt{n(n-1)}} & \frac{1}{\sqrt{n(n-1)}} & \frac{1}{\sqrt{n(n-1)}} & \cdots & & -\frac{n-1}{\sqrt{n(n-1)}}
+    \end{pmatrix}
+  \end{equation}
+直交行列$H$は，1行目が$(1/\sqrt{n}, \dots, 1/\sqrt{n})$であり，2行目以降は互いに直交するように構成されて,第$k$行($k=2,\dots,n$)は
+\begin{equation*}
+  \frac{1}{\sqrt{k(k-1)}}(\underbrace{1, \dots, 1}_{k-1個}, -(k-1), 0, \dots, 0)
+\end{equation*}
+で構成される．この行列$H$をヘルマート(Helmert)行列と呼ぶ．
+
+さて，直交変換前のr.v.\quad $Z_1, \dots, Z_n, i.i.d. \sim N(0,1)$ であることから，$Z=(Z_1, \dots, Z_n)^T$ におけるjoint p.d.f.は
+\begin{equation}
+  f_Z(z) = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi}} \exp\left(-\frac{z_i^2}{2}\right) = \frac{1}{(2\pi)^{n/2}} \exp\left(-\frac{1}{2} z^T z\right)
+\end{equation}
+である．ここで，$Y=HZ$の変換に対して，$Y$のjoint p.d.f.は
+\begin{equation}
+  f_Y(y) = f_Z(z(y)) \ab | \frac{\partial(z_1, \cdots, z_n)}{\partial(y_1, \cdots, y_n)} |
+  \label{eq:pdf_transformation}
+\end{equation}
+であった．ここで，ヤコビアンは
+\begin{equation}
+  \ab |\frac{\partial(z_1, \cdots, z_n)}{\partial(y_1, \cdots, y_n)}| = \ab | \frac{1}{\frac{\partial(y_1, \cdots, y_n)}{\partial(z_1, \cdots, z_n)}} |
+   = \frac{1}{|\det(H)|} = 1
+   \label{eq:jacobian}
+\end{equation}
+となる．\footnote{$Y_i = \sum_{j=1}^{n} H_{ij} Z_j$ より，$\frac{\partial y_i}{\partial z_j} = H_{ij}$ である．}また，$z=H^{-1} y = H^T y$ であることから,
+$z^T z = y^T (H H^T) y = y^T y$ である．したがって，$Y$のjoint p.d.f.は\eqref{eq:pdf_transformation},\quad \eqref{eq:jacobian}より，
+\begin{equation}
+  f_Y(y) = \frac{1}{(2\pi)^{n/2}} \exp\left(-\frac{1}{2} y^T y\right) = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi}} \exp\left(-\frac{y_i^2}{2}\right)
+\end{equation}
+となる．つまり，
+\begin{equation}
+  Y_1, \dots, Y_n \quad \text{i.i.d.} \sim N(0,1)
+  \label{eq:transformed_rv}
+\end{equation}
+である．
+ヘルマート行列の1行目の成分は$(1/\sqrt{n}, \dots, 1/\sqrt{n})$であり，$Y=HZ$の1成分目は
+\begin{equation}
+  Y_1 = \frac{1}{\sqrt{n}} \sum_{i=1}^{n} Z_i = \sqrt{n} \bar{Z}
+\end{equation}
+である．したがって，$Y_1 = \sqrt{n} \bar{Z} \sim N(0,1)$ であり，(2')が成り立つ．$\sum _{i=1}^{n} (Z_i - \bar{Z})^2$ は，$Y_2, \dots, Y_n$ を用いて
+\begin{align}
+  \sum_{i=1}^{n} (Z_i - \bar{Z})^2 &= \sum_{i=1}^{n} Z_i^2 - 2\bar{Z} \sum_{i=1}^{n} Z_i + n \bar{Z}^2 = \sum_{i=1}^{n} Z_i^2 - n \bar{Z}^2 \notag \\ 
+  &= \sum_{i=1}^{n} Z_i^2 - Y_1^2 = Y^T Y - Y_1^2 = \sum_{i=2}^{n} Y_i^2
+  \label{eq:sum_of_squares}
+\end{align}
+と書ける．ここで，$Z^T Z = Y^T Y$ を用いた．独立な標準正規分布に従うr.v.の二乗和はカイ二乗分布に従い，その自由度は和の項数に等しいので，
+\eqref{eq:transformed_rv},\quad \eqref{eq:sum_of_squares}より，
+\begin{equation}
+  \sum_{i=1}^{n} (Z_i - \bar{Z})^2  \sim \chi^2_{n-1}
+\end{equation}
+となり，(3')が成り立つ．
+
+最後に，$Y_1, \cdots, Y_n$ の独立性から，$Y_1$ と $(Y_2, \cdots, Y_n)^T $ は独立である．
+$\bar{Z}$は$Y_1$のみの関数であり，$\sum_{i=1}^{n} (Z_i - \bar{Z})^2$は$(Y_2, \cdots, Y_n)^T$のみの関数であるから，
+$\bar{Z} \indep \sum_{i=1}^{n} (Z_i - \bar{Z})^2$ であり，(1')が成り立つ．
+\end{proof}
+
+\subsection{$t$-分布}
+$X_1, \dots, X_n \quad \text{i.i.d.} \sim N(\mu, \sigma^2)$ とする．このとき，\textbf{定理 \ref{thm:principal}}，\eqref{eq:standardized_sample_mean2}から新たなr.v. $Z$を
+\begin{equation}
+  Z \coloneqq \sqrt{n} \bar{Z} = \frac{\bar{X}-\mu}{\sigma/\sqrt{n}}
+\end{equation}
+と定義すると，$Z \sim N(0,1)$である．ここで母分散$\sigma^2$の代わりに不偏分散 $V^2$を用いて，r.v. $T$を
+\begin{equation}
+  T \coloneqq \frac{\bar{X}-\mu}{V/\sqrt{n}}
+  \label{eq:t_distribution}
+\end{equation}
+と定義し，この確率分布を考える．$\mu$ に既知の値が入るとき，このr.v.を$t$-\hyperlink{def:statistic}{統計量}という．
+r.v. $U$を
+\begin{equation}
+  U \coloneqq \frac{(n-1)V^2}{\sigma^2} 
+  \label{eq:chi_squared_distribution}
+\end{equation}
+と定義すると，\textbf{定理 \ref{thm:principal}}から$U \sim \chi^2_{n-1}$であり，$\bar{X} \indep V^2$ から $Z \indep U$ である．\eqref{eq:t_distribution},\quad \eqref{eq:chi_squared_distribution}より，
+\begin{equation}
+  T = \frac{\bar{X}-\mu}{V/\sqrt{n}} = \frac{Z}{\sqrt{\frac{U}{n-1}}}
+\end{equation}
+と書き直すことができる．この$t$-\hyperlink{def:statistic}{統計量} は，r.v. $Z \sim N(0,1)$ と $U \sim \chi^2_{n-1}$ を組み合わせて作られた分布である．$T$の従う分布は自由度$n-1$の$t$-分布と呼ばれる．$m=n-1$として，自由度$m$の$t$-分布の定義を与える．
+\begin{mydefinition}{自由度$m$の$t$-分布}
+r.v. $Z \sim N(0,1)$ と $U \sim \chi^2_{m}$ が独立であるとき，
+\begin{equation}
+  T = \frac{Z}{\sqrt{U/m}}
+\end{equation}
+と定義されるr.v. $T$ の分布を，自由度$m$のスチューデントの$t$-分布といい，この分布を$t_m$で表す．
+\end{mydefinition}
+
+\end{document}

@@ -1,0 +1,503 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{確率変数列の収束と漸近理論}
+
+\subsection{確率収束と大数の弱法則}
+確率変数の列$U_1,U_2,\dots$を$\{U_n\}_{n=1,2,\dots}$と表記することにする．
+
+\begin{mydefinition}{確率収束(convergence in probability)}
+\label{def:convergence_in_probability} % ラベルを付けて後から
+  確率変数の列$\{U_n\}$が確率変数$U$に\textbf{確率収束}するとは，任意の$\epsilon >0$に対して
+  \begin{equation}
+    \lim_{n \to \infty} \PP(|U_n - U| \geq \epsilon) = 0
+  \end{equation}
+  が成り立つことをいう．このとき，$U_n \xrightarrow{p} U$ と表記する．
+\end{mydefinition}
+
+確率収束を示すのに，次の不等式を用いると便利である．
+\begin{mylemma}{マルコフの不等式(Markov's inequality)}
+\label{lem:markov_inequality} % ラベルを付けて後から参照
+  $Y \geq 0$なるr.v.\quad $Y$に対し，$E[Y] < \infty$とする．このとき任意の$c > 0$に対して次の不等式が成り立つ．
+  \begin{equation}
+    \PP(Y \geq c) \leq \frac{E[Y]}{c}
+    \label{eq:markov_inequality}
+  \end{equation}
+\end{mylemma}
+
+\begin{proof}
+  指示関数\footnote{集合$A$上で1,$A$の外で0である関数，
+  \begin{equation*}
+    I_{A} = \begin{cases}
+      1 & (x \in A) \\
+      0 & (x \notin A)
+    \end{cases}
+  \end{equation*}
+  を$A$の指示関数(indicator function)という．}$I_{[\,Y \geq c\,]}$，$I_{[\,Y < c\,]}$をそれぞれ
+  \begin{equation}
+    I_{[\,Y \geq c\,]} = \begin{cases}
+      1 & (Y \geq c) \\
+      0 & (Y < c)
+    \end{cases}, \quad
+    I_{[\,Y < c\,]} = \begin{cases}
+      1 & (Y < c) \\
+      0 & (Y \geq c)
+    \end{cases}
+  \end{equation}
+  と定める．r.v. $Y$は非負であるから，
+  \begin{equation}
+    Y = Y \{I_{[\,Y \geq c\,]} + I_{[\,Y < c\,]}\} \geq Y  I_{[\,Y \geq c\,]} \geq c  I_{[\,Y \geq c\,]}
+  \end{equation}
+  となる．両辺の期待値を取ると，
+  \begin{equation}
+    E[Y] \geq c E[I_{[\,Y \geq c\,]}] 
+    \label{eq:markov_inequality_proof}
+  \end{equation}
+  となる．ここで，
+  \begin{equation}
+    E[I_{[\,Y \geq c\,]}] = 1 \cdot \PP(Y \geq c) + 0 \cdot \PP(Y < c) = \PP(Y \geq c)
+  \end{equation}
+  であるから，\eqref{eq:markov_inequality_proof}に適用するとマルコフの不等式が得られる．
+\end{proof}
+\begin{mylemma}{チェビシェフの不等式(Chebyshev's inequality)}
+\label{lem:chebyshev_inequality} % ラベルを付けて後から参照
+  r.v.$X$について平均と分散，$\mu = E[X], \sigma^2=\Var(X)$が存在すると仮定する．このとき次の不等式が成り立つ．
+  \begin{equation}
+    \PP(|X - \mu| \geq k) \leq \frac{\sigma^2}{k^2} 
+    \label{eq:chebyshev_inequality}
+  \end{equation}
+  \end{mylemma}
+\begin{proof}
+  \hyperref[lem:markov_inequality]{マルコフの不等式}に於いて，$Y = (X - \mu)^2$，$c = k^2$とおく．
+  \eqref{eq:markov_inequality}より，
+  \begin{equation}
+    \PP((X - \mu)^2 \geq k^2) \leq \frac{E[(X - \mu)^2]}{k^2} 
+  \end{equation}
+となる．ここで，$\PP((X - \mu)^2 \geq k^2) = \PP(|X - \mu| \geq k)$，$E[(X - \mu)^2] = \Var(X) = \sigma^2$であるから，\eqref{eq:chebyshev_inequality}が得られる．
+\end{proof}
+
+\hyperref[lem:chebyshev_inequality]{チェビシェフの不等式}を用いると，標本平均の\hyperref[def:convergence_in_probability]{確率収束}が示される．これを\textbf{大数の弱法則}(weak law of large numbers)という．
+\begin{mytheorem}{大数の弱法則(weak law of large numbers)}
+\label{thm:weak_law_of_large_numbers} % ラベルを付けて後から参照
+  r.v.$X_1,\dots, X_n$を平均$\mu$,分散$\sigma^2$とする同一の確率分布からの\hyperref[def:random_sample]{無作為標本}とする．すなわち$X_1,\dots,X_n$ i.i.d. $\sim (\mu, \sigma^2)$とし，$\sigma^2 = \Var(X_i) < \infty$とする．このとき，標本平均$\bar{X}_n = \frac{1}{n} \sum_{i=1}^{n} X_i$は母平均$\mu$に\hyperref[def:convergence_in_probability]{確率収束}する．すなわち，任意の$\epsilon >0$に対して
+  \begin{equation}
+    \lim_{n \to \infty} \PP(|\bar{X}_n - \mu| \geq \epsilon) = 0
+  \end{equation}
+  が成り立つ．
+\end{mytheorem}
+\begin{proof}
+\hyperref[lem:chebyshev_inequality]{チェビシェフの不等式}より，
+\begin{equation}
+  0 \leq \PP(|\bar{X}_n - \mu| \geq \epsilon) \leq \frac{\Var(\bar{X}_n)}{\epsilon^2} = \frac{\sigma^2}{n \epsilon^2} 
+  \label{eq:weak_law_of_large_numbers_proof_1}
+\end{equation}
+となる．$n \to \infty$とすると$\PP(|\bar{X}_n - \mu| \geq \epsilon) \to 0$となり，確率収束することが分かる．
+\end{proof}
+標本平均$\bar{X}$が母平均$\mu$に確率収束するので，これを$\bar{X} \xrightarrow{p} \mu$と表記する．
+
+\subsection{分布収束と中心極限定理}
+\begin{mydefinition}{分布収束(convergence in distribution)}
+\label{def:convergence_in_distribution} % ラベルを付けて後から参照
+  r.v.の列$\{U_n\}_{n=1,2,\dots}$がr.v.$U$に\textbf{分布収束}するとは，$U_n$の分布関数$F_{U_n}(x)$がr.v.$U$の分布関数$F_U(x)$に各点$x$で収束することをいう．すなわち，任意の$x \in \R$に対して
+  \begin{equation}
+    \lim_{n \to \infty} \PP(U_n \leq x) = \lim_{n \to \infty} F_{U_n}(x) = F_U(x)
+  \end{equation}
+  が成り立つことをいう．このとき，$U_n \xrightarrow{d} U$と表記する．
+\end{mydefinition}
+
+\begin{myattention}{}
+  $U_n \xrightarrow{d} F_U$のように記すこともある．また$X \sim N(0,\sigma^2)$のとき，$X_n \xrightarrow{d} N(0,\sigma^2)$と書くこともある．
+\end{myattention}
+
+\begin{mytheorem}{特性関数の連続性定理}
+\label{thm:continuity_theorem_of_characteristic_functions} % ラベルを付けて後から参照
+  r.v.の列$\{U_n\}_{n=1,2,\dots}$がr.v.$U$に\hyperref[def:convergence_in_distribution]{分布収束}することと，任意の$t \in \R$に対してr.v. $U_n$の特性関数$\varphi_{U_n}(t)$がr.v. $U$の特性関数$\varphi_U(t)$に収束することは同値である．すなわち，
+  \begin{equation}
+    \lim_{n \to \infty} F_{U_n}(x) = F_U(x) \quad \Leftrightarrow \quad \lim_{n \to \infty} \varphi_{U_n}(t) = \varphi_U(t), \quad \forall t \in \R
+  \end{equation}
+  が成り立つ．
+\end{mytheorem}
+\begin{proof}
+  $X$が連続型r.v.のとき，特性関数$\varphi_X(t)$は
+  \begin{equation}
+    \varphi_X(t) = E[e^{itX}] = \int_{-\infty}^{\infty} e^{itx} f_X(x) dx
+    \label{eq:characteristic_function_continuous_rv}
+  \end{equation}
+  と表される．ここで，$f_X(x)$はr.v. $X$のp.d.f.である．\eqref{eq:characteristic_function_continuous_rv}は$f_X(x)$をFourier変換したものに過ぎないので，逆変換を施すと，
+  \begin{equation}
+    f_X(x) = \frac{1}{2\pi} \int_{-\infty}^{\infty} e^{-itx} \varphi_X(t) dt
+    \label{eq:inverse_characteristic_function_continuous_rv}
+  \end{equation}
+  となる．このように確率分布と特性関数は一対一に対応している．収束に関しても特性関数の各点収束と分布収束が一対一に対応している．
+\end{proof}
+
+\begin{mytheorem}{中心極限定理(central limit theorem)}
+\label{thm:central_limit_theorem} % ラベルを付けて後から参照
+  r.v.$X_1, X_2, \dots$を平均$\mu$, 分散$\sigma^2$を持つ同一の確率分布からの\hyperref[def:random_sample]{無作為標本}とする．すなわち，$X_1, X_2, \dots$ i.i.d. $\sim (\mu, \sigma^2)$とし，次の分布収束が成り立つ．
+  ここで，$\bar{X} = \frac{1}{n} \sum_{i=1}^{n} X_i$は標本平均である．
+  \begin{equation}
+    \frac{\sqrt{n}(\bar{X} - \mu)}{\sigma} \xrightarrow{d} N(0,1)
+    \label{eq:central_limit_theorem}
+  \end{equation}
+  \eqref{eq:central_limit_theorem}は，
+  \begin{equation}
+    \lim_{n \to \infty} \PP\left(\frac{\sqrt{n}(\bar{X} - \mu)}{\sigma} \leq x\right) = \int_{-\infty}^{x} \frac{1}{\sqrt{2\pi}} e^{-y^2/2} dy = \Phi(x)
+  \end{equation}
+  と書き直せる．ここで，$\Phi(x)$は標準正規分布$N(0,1)$の分布関数である．
+\end{mytheorem}
+\begin{proof}
+$E[\bar{X}_n] = \mu$，$\Var(\bar{X}) = \sigma^2/n$であるから，$\bar{X}$を標準化すると，
+\begin{equation}
+  U_n = \frac{\bar{X} - \mu}{\sigma/\sqrt{n}} = \frac{\sqrt{n}(\bar{X} - \mu)}{\sigma}
+  \label{eq:standardized_sample_mean_clt}
+\end{equation}
+となる．$E[X_i] = \mu$，$\Var(X_i) = \sigma^2$であるから，$X_i$を標準化すると，$Z_i = \frac{X_i - \mu}{\sigma} $となる．$\bar{Z} = \frac{1}{n} \sum_{i=1}^{n} Z_i$とおくと，
+\begin{equation}
+  \bar{Z} = \frac{1}{n} \sum_{i=1}^{n} \frac{X_i - \mu}{\sigma} = \frac{\bar{X} - \mu}{\sigma}
+  \label{eq:standardized_sample_mean}
+\end{equation}
+であり，\eqref{eq:standardized_sample_mean}から
+\begin{equation}
+  \sqrt{n} \bar{Z} = \frac{\sqrt{n}(\bar{X} - \mu)}{\sigma} 
+\end{equation}
+と書ける．\eqref{eq:standardized_sample_mean_clt}と見比べると，$U_n = \sqrt{n} \bar{Z}$が$\bar{X}$を標準化したr.v.である．したがって，$U_n = \sqrt{n} \bar{Z}$が$N(0,1)$に分布収束することを示せばよい．このことは\textbf{定理 \ref{thm:continuity_theorem_of_characteristic_functions}}より，$U_n$の特性関数の$n \to \infty$での極限$\lim \varphi_{U_n}(t)$が
+$N(0,1)$の特性関数$\varphi_{N(0,1)}(t) = e^{-t^2/2}$に一致することを示すことと同等である．
+
+さて，$U_n = \sqrt{n} \bar{Z} = \frac{1}{\sqrt{n}} \sum_{i=1}^{n} Z_i$の特性関数は，$Z_i$が互いに独立であることに注意して
+\begin{equation}
+  \varphi_{\sqrt{n} \bar{Z}} (t) = E \ab [e^{it \sqrt{n} \bar{Z}}] = E \ab [e^{it \frac{1}{\sqrt{n}} \sum_{i=1}^{n} Z_i}] = E \ab [e^{i \frac{t}{\sqrt{n}} Z_1} \cdot e^{i \frac{t}{\sqrt{n}} Z_2} \cdots e^{i \frac{t}{\sqrt{n}} Z_n}] 
+  = \prod_{i=1}^{n} E \ab [e^{i \frac{t}{\sqrt{n}} Z_i}]
+  \label{eq:clt_characteristic_function} 
+\end{equation}
+と計算できる．$Z_1,\dots,Z_n$ i.i.d.$\sim N(0,1)$であるから，各r.v.に対応する特性関数も一致するので，
+\begin{equation}
+  \varphi_{Z_1} \ab(\frac{t}{\sqrt{n}}) = \cdots = \varphi_{Z_n} \ab (\frac{t}{\sqrt{n}}) = E \ab [e^{i \frac{t}{\sqrt{n}} Z_1}]
+\end{equation}
+となり，$U_n = \sqrt{n} \bar{Z}$の特性関数は\eqref{eq:clt_characteristic_function}から，
+\begin{equation}
+  \varphi_{\sqrt{n} \bar{Z}} (t) = \left\{ \varphi_{Z_1} \ab (\frac{t}{\sqrt{n}}) \right\}^n
+  \label{eq:clt_characteristic_function_2}
+\end{equation}
+と書ける．\eqref{eq:clt_characteristic_function_2}の$n \to \infty$での極限を取り，$N(0,1)$の特性関数に一致することを示す．
+$n \gg 1$のとき，特性関数$\varphi_{Z_1} \ab (\frac{t}{\sqrt{n}})$をテイラー展開すると，
+\begin{align}
+  \varphi_{Z_1} \ab (\frac{t}{\sqrt{n}}) &= \varphi_{Z_1}(0) + \varphi'_{Z_1}(0) \frac{t}{\sqrt{n}} + \frac{1}{2} \varphi''_{Z_1}(0) \ab (\frac{t}{\sqrt{n}})^2 + \frac{1}{3!} \varphi^{(3)}_{Z_1}(0) \ab (\frac{t}{\sqrt{n}})^3 + \cdots \notag \\
+  &= 1 - \frac{t^2}{2n} + \mathcal{O}(n^{-3/2})
+  \label{eq:clt_characteristic_function_taylor}
+\end{align}
+となるので，\eqref{eq:clt_characteristic_function_2}は
+\begin{equation}
+  \varphi_{\sqrt{n} \bar{Z}} (t) = \left( 1 - \frac{t^2}{2n} + \mathcal{O}(n^{-3/2}) \right)^n
+  \label{eq:clt_characteristic_function_3}
+\end{equation}
+となり，$n \to \infty$の極限を取ると，
+\begin{equation}
+  \lim_{n \to \infty} \varphi_{\sqrt{n} \bar{Z}} (t) = \lim_{n \to \infty} \left( 1 - \frac{t^2}{2n} + \mathcal{O}(n^{-3/2}) \right)^n = e^{-t^2/2}
+\end{equation}
+となる．これは$ N(0,1)$の特性関数に一致するので，\textbf{定理 \ref{thm:continuity_theorem_of_characteristic_functions}}より，$U_n = \sqrt{n} \bar{Z}$は$N(0,1)$に分布収束する．
+\end{proof}
+
+\subsection{収束に関する諸結果}
+分布収束と確率収束との関係が次の命題で与えられる．
+\begin{myproposition}{}
+\label{prop:convergence_relationship} % ラベルを付けて後から参照
+  r.v.の列$\{U_n\}_{n=1,2,\dots}$とr.v.$U$を考える．
+  \begin{enumerate}[label=(\arabic*)]
+    \item $U_n \xrightarrow{p} U$ならば，$U_n \xrightarrow{d} U$
+    \item $a$を定数とするとき，$U_n \xrightarrow{d} a$ならば，$U_n \xrightarrow{p} a$
+  \end{enumerate}
+\end{myproposition}
+\begin{proof}
+  最初に，
+\begin{bluebox}
+r.v.'s $S,T$と実数$w$と$\epsilon >0$に対して不等式
+\begin{equation}
+  \PP(S \leq w- \epsilon) - \PP(|S - T| > \epsilon) \leq \PP(T \leq w) \leq \PP(S \leq w + \epsilon) + \PP(|S - T| > \epsilon)
+  \label{eq:convergence_relationship_proof_1}
+\end{equation}
+\end{bluebox}
+が成り立つことを示す．$\PP(T \leq w)$を
+\begin{equation}
+  \PP(T \leq w) = \PP(T \leq w, |S - T| \leq \epsilon) + \PP(T \leq w, |S - T| > \epsilon)
+  \label{eq:convergence_relationship_proof_2}
+\end{equation}
+と分解する．ここで\eqref{eq:convergence_relationship_proof_2}の第2項に対して，
+\begin{equation}
+  \PP(T \leq w, |S - T| > \epsilon) \leq \PP(|S - T| > \epsilon)
+  \label{eq:convergence_relationship_proof_3}
+\end{equation}
+が成り立つ．また，\eqref{eq:convergence_relationship_proof_2}の第1項に対しては，$|S - T| \leq \epsilon$ならば$T - \epsilon \leq S \leq T + \epsilon$であり，$T \leq w$であるから$S \leq w + \epsilon$が成り立つので，$\{T \leq w, |S - T| \leq \epsilon\} \subseteq \{S \leq w + \epsilon\}$となり，
+\begin{equation}
+  \PP(T \leq w, |S - T| \leq \epsilon) \leq \PP(S \leq w + \epsilon)
+  \label{eq:convergence_relationship_proof_4}
+\end{equation}
+が成り立つ．\eqref{eq:convergence_relationship_proof_3}, \eqref{eq:convergence_relationship_proof_4}から\eqref{eq:convergence_relationship_proof_2}の右辺を評価すると，
+\begin{equation}
+  \PP(T \leq w) \leq \PP(S \leq w + \epsilon) + \PP(|S - T| > \epsilon)
+  \label{eq:convergence_relationship_proof_5}
+\end{equation}
+が得られる．この不等式に於いて$w$を$w - \epsilon$に置き換え,$S$と$T$を交換すると，
+\begin{equation}
+  \PP(S \leq w - \epsilon) - \PP(|S - T| > \epsilon) \leq \PP(T \leq w)
+  \label{eq:convergence_relationship_proof_6}
+\end{equation}
+が得られる．\eqref{eq:convergence_relationship_proof_5}と\eqref{eq:convergence_relationship_proof_6}を合わせると，\eqref{eq:convergence_relationship_proof_1}が得られる．
+
+(1)に関しては$U_n \xrightarrow{p} U \Rightarrow U_n \xrightarrow{d} U$，すなわち $\lim_{n \to \infty} \PP(U_n \leq x) = \PP(U \leq x)$を示せばよい．\eqref{eq:convergence_relationship_proof_1}に於いて，$S = U, T = U_n, w = x$とおくと，
+\begin{equation}
+  \PP(U \leq x - \epsilon) - \PP(|U - U_n| > \epsilon) \leq \PP(U_n \leq x) \leq \PP(U \leq x + \epsilon) + \PP(|U - U_n| > \epsilon)
+  \label{eq:convergence_relationship_proof_7}
+\end{equation}
+と書ける．$U_n \xrightarrow{p} U$，すなわち$\lim_{n \to \infty} \PP(|U - U_n| > \epsilon) = 0$であるから，\eqref{eq:convergence_relationship_proof_7}の$n \to \infty$での極限を取ると，
+\begin{equation}
+  \PP(U \leq x - \epsilon) \leq \lim_{n \to \infty} \PP(U_n \leq x) \leq \PP(U \leq x + \epsilon)
+  \label{eq:convergence_relationship_proof_8}
+\end{equation}
+となる．$F_U(x)$が$x$で連続であることから，$\epsilon \to 0$とすると，$\lim_{n \to \infty} \PP(U_n \leq x) = \PP(U \leq x)$となり$U_n \xrightarrow{d} U$が示される．
+
+(2)に関しては$U_n \xrightarrow{d} a \Rightarrow U_n \xrightarrow{p} a$，すなわち $\lim_{n \to \infty} \PP(|U_n - a| > \epsilon) = 0$を示せばよい．
+\begin{align}
+  \PP(|U_n - a| > \epsilon) = \PP(U_n > a + \epsilon) + \PP(U_n < a - \epsilon)  \notag \\
+  \leq 1 - \PP(U_n \leq a + \epsilon) + \PP(U_n \leq a - \epsilon)
+  \label{eq:convergence_relationship_proof_9}
+\end{align}
+である．$U_n \xrightarrow{d} a$は，$\lim_{n \to \infty} \PP(U_n \leq x) = \lim_{n \to \infty} F_{U_n} (x) = \PP(a \leq x) = F_a(x)$であるので，
+\begin{equation}
+  F_a(x) = \begin{cases}
+    0 & (x < a) \\
+    1 & (x \geq a)
+  \end{cases}
+  \label{eq:convergence_relationship_proof_10}
+\end{equation}
+である．$x= a + \epsilon$と$x = a - \epsilon$を\eqref{eq:convergence_relationship_proof_10}に適用すると
+\begin{equation}
+  \begin{split}
+    \lim_{n \to \infty} \PP(U_n \leq a - \epsilon) = F_a(a - \epsilon) &= 0 \\
+    \lim_{n \to \infty} \PP(U_n \leq a + \epsilon) = F_a(a + \epsilon) &= 1
+  \label{eq:convergence_relationship_proof_11}
+  \end{split}
+\end{equation}
+となる．\eqref{eq:convergence_relationship_proof_9}の$n \to \infty$での極限を取ると，\eqref{eq:convergence_relationship_proof_11}より，
+\begin{equation}
+  0 \leq \lim_{n \to \infty} \PP(|U_n - a| > \epsilon) \leq 1 - 1 + 0 = 0
+\end{equation}
+となり，$U_n \xrightarrow{p} a$が示される．
+\end{proof}
+
+分布収束の同値な条件として次の定理が知られている．
+\begin{mytheorem}{ポートマントーの補題(Portmanteau's lemma)}
+\label{thm:equivalent_condition_of_convergence_in_distribution} % ラベルを付けて後から参照
+r.v.の列$\{U_n\}_{n=1,2,\dots}$とr.v.$U$を考える．このとき，$U_n \xrightarrow{d} U$となる必要十分条件は，任意の有界連続な関数$f: \R \to \R$に対して
+\begin{equation}
+  \lim_{n \to \infty} E[f(U_n)] = E[f(U)]
+\end{equation}
+が成り立つことである．
+\end{mytheorem}
+\begin{proof}
+  \href{https://ibis.t.u-tokyo.ac.jp/suzuki/lecture/2021/elemprob/%E7%A2%BA%E7%8E%87%E6%95%B0%E7%90%86%E8%A6%81%E8%AB%964.pdf}{https://ibis.t.u-tokyo.ac.jp/suzuki/lecture/2021/elemprob/確率数理要論4.pdf}や\\
+  \url{https://mcm-www.jwu.ac.jp/~konno/pdf/stat_rikkyo-2024_ch4_0914.pdf} を参照．
+\end{proof}
+
+\begin{myproposition}{連続写像定理(continuous mapping theorem)}
+\label{prop:continuous_mapping_theorem} % ラベルを付けて後から参照
+  r.v.の列$\{U_n\}_{n=1,2,\dots}$とr.v.$U$を考える．$h: \R \to \R$を連続関数とする．このとき，次が成り立つ．
+  \begin{enumerate}[label=(\arabic*)]
+    \item $U_n \xrightarrow{p} U$ならば，$h(U_n) \xrightarrow{p} h(U)$
+    \item $U_n \xrightarrow{d} U$ならば，$h(U_n) \xrightarrow{d} h(U)$
+  \end{enumerate}
+\end{myproposition}
+\begin{proof}
+(2)のみ示す．$h(U_n) \xrightarrow{d} h(U)$は\textbf{定理 \ref{thm:equivalent_condition_of_convergence_in_distribution}}より，任意の有界連続な関数$f: \R \to \R$に対して
+\begin{equation}
+  \lim_{n \to \infty} E[f(h(U_n))] = E[f(h(U))]
+  \label{eq:continuous_mapping_theorem_proof_1}
+\end{equation}
+と書けるので，\eqref{eq:continuous_mapping_theorem_proof_1}を示せばよい．$g = f \circ h$とおくと，$g$も有界連続な関数であるから，$U_n \xrightarrow{d} U$より，
+\begin{equation}
+  \lim_{n \to \infty} E[g(U_n)] = E[g(U])
+  \label{eq:continuous_mapping_theorem_proof_2}
+\end{equation}
+が成り立つ．\eqref{eq:continuous_mapping_theorem_proof_2}に$g = f \circ h$を代入すると，\eqref{eq:continuous_mapping_theorem_proof_1}が得られる．
+
+\end{proof}
+
+\begin{myproposition}{スラツキーの定理(Slutzky's theorem)}
+\label{prop:slutzky_theorem} % ラベルを付けて後から参照
+  r.v.の列$\{U_n\}_{n=1,2,\dots}$と$\{V_n\}_{n=1,2,\dots}$，r.v.$U$，定数$a$に対して，$U_n \xrightarrow{d} U$，$V_n \xrightarrow{p} a$が成り立つとする．このとき，次が成り立つ．
+  \begin{enumerate}[label=(\arabic*)]
+    \item $U_n + V_n \xrightarrow{d} U + a$
+    \item $U_n V_n \xrightarrow{d} aU$
+  \end{enumerate}
+\end{myproposition}
+\begin{proof}
+\textbf{命題 \ref{prop:convergence_relationship}}より，$V_n \xrightarrow{p} a \Rightarrow V_n \xrightarrow{d} a$である．このことから，$(U_n, V_n) \xrightarrow{d} (U,a)$が成り立つ．ここで，有界連続な関数$h_1 , h_2 \colon \R \times \R \to \R$を
+\begin{equation}
+  h_1 (U_n, V_n) = U_n + V_n, \quad h_2 (U_n, V_n) = U_n V_n
+\end{equation}
+と定義する．\hyperref[prop:continuous_mapping_theorem]{連続写像定理}より，
+\begin{equation}
+  h_1 (U_n, V_n) = U_n + V_n \xrightarrow{d} h_1 (U,a) = U + a
+\end{equation}
+および 
+\begin{equation}
+  h_2 (U_n, V_n) = U_n V_n \xrightarrow{d} h_2 (U,a) = aU
+\end{equation}
+が成り立つ．
+\end{proof}
+\hyperref[prop:slutzky_theorem]{スラツキーの定理}の証明は，同時分布の収束や2変数関数に対する\hyperref[prop:continuous_mapping_theorem]{連続写像定理}を使わないでも，直接示すことができる．
+\begin{proof}
+(1)については．$x$を$U$の分布関数の連続点とし，不等式\eqref{eq:convergence_relationship_proof_1}に於いて，$S = U_n + a, T = U_n + V_n, w = x$とおくと，
+\begin{equation}
+  \PP(U_n  \leq x -a - \epsilon) - \PP(|V_n - a| > \epsilon) \leq \PP(U_n + V_n \leq x) \leq \PP(U_n  \leq x -a + \epsilon) + \PP(|V_n - a| > \epsilon)
+  \label{eq:slutzky_theorem_proof_1}
+\end{equation}
+となる．\eqref{eq:slutzky_theorem_proof_1}の$n \to \infty$での極限を取ると，$U_n \xrightarrow{d} U$，$V_n \xrightarrow{p} a$であるから，
+\begin{equation}
+  \PP(U \leq x -a - \epsilon) \leq \lim_{n \to \infty} \PP(U_n + V_n \leq x) \leq \PP(U \leq x -a + \epsilon)
+  \label{eq:slutzky_theorem_proof_2}
+\end{equation}
+となる．$\epsilon \to 0$とすると，$U$の分布関数が$x - a$で連続であることから，
+\begin{align}
+  \lim_{n \to \infty} \PP(U_n + V_n \leq x) &= \PP(U \leq x -a) \notag \\
+  &= \PP(U + a \leq x)
+  \label{eq:slutzky_theorem_proof_3}
+\end{align}
+より，$U_n + V_n \xrightarrow{d} U + a$が示される．
+
+(2)については，$U_n V_n = U_n V_n - a U_n + a U_n = U_n (V_n - a) + a U_n $とし，
+\begin{equation}
+  U_n (V_n - a) + a U_n \xrightarrow{d} aU
+  \label{eq:slutzky_theorem_proof_4}
+\end{equation}
+を示す．$aU_n \xrightarrow{d} aU$に注意\footnote{$h(U_n)=aU_n$と定義すると，$h(U_n) \xrightarrow{d} h(U)$となるので，$aU_n \xrightarrow{d} aU$が成り立つ．}
+すると，\hyperref[prop:slutzky_theorem]{スラツキーの定理}(1)より\eqref{eq:slutzky_theorem_proof_4}を示すためには
+$U_n \xrightarrow{d} U , V_n \xrightarrow{p} a$のとき，
+\begin{equation}
+  U_n (V_n - a) \xrightarrow{p} 0
+  \label{eq:slutzky_theorem_proof_5}
+\end{equation}
+を示せばよい．ここで$V_n \xrightarrow{p} a$で，有界連続な関数$h \colon \R \to \R$を$h(V_n) = V_n -a $と定義すると，\hyperref[prop:continuous_mapping_theorem]{連続写像定理}より
+\begin{equation}
+  h(V_n) = V_n - a \xrightarrow{p} h(a) = 0
+  \label{eq:slutzky_theorem_proof_6}
+\end{equation}
+となるので$V_n ' = V_n -a$とおくと\eqref{eq:slutzky_theorem_proof_5}は$U_n \xrightarrow{d} U , V_n ' \xrightarrow{p} 0$のとき，
+\begin{equation}
+  U_n V_n ' \xrightarrow{p} 0
+  \label{eq:slutzky_theorem_proof_7}
+\end{equation}
+を示すことに帰着する．すなわち\eqref{eq:slutzky_theorem_proof_5}で$a=0$の場合, $U_n \xrightarrow{d} U , V_n \xrightarrow{p} 0$のとき，$U_n V_n \xrightarrow{p} 0$を示せばよい．
+
+$\epsilon>0, \delta > 0$に対して，
+\begin{equation}
+  \PP(|U_n V_n| > \epsilon) = \PP(|U_n V_n| > \epsilon, |V_n| \leq \delta) + \PP(|U_n V_n| > \epsilon, |V_n| > \delta)
+  \label{eq:slutzky_theorem_proof_8}
+\end{equation}
+と分解する．\eqref{eq:slutzky_theorem_proof_8}の第2項に対して，
+\begin{equation}
+  \PP(|U_n V_n| > \epsilon, |V_n| > \delta) \leq \PP(|V_n| > \delta)
+  \label{eq:slutzky_theorem_proof_9}
+\end{equation}
+が成り立つ．また，\eqref{eq:slutzky_theorem_proof_8}の第1項に対しては，$|V_n| \leq \delta \Leftrightarrow 1/|V_n| \geq 1/\delta$であるから，
+\begin{equation}
+  |U_n | = \frac{|U_n V_n|}{|V_n|} \geq \frac{|U_n V_n|}{\delta} 
+\label{eq:slutzky_theorem_proof_10}
+\end{equation}
+となり，$|U_n V_n| > \epsilon$も考慮すると，$|U_n| > \epsilon / \delta$となる．すなわち$\{ |U_n V_n| > \epsilon, |V_n| \leq \delta \} \subseteq \{ |U_n| > \epsilon / \delta \}$となるので，
+\begin{equation}
+  \PP(|U_n V_n| > \epsilon, |V_n| \leq \delta) \leq \PP(|U_n| > \epsilon / \delta)
+  \label{eq:slutzky_theorem_proof_11}
+\end{equation}
+が成り立つ．\eqref{eq:slutzky_theorem_proof_9}と\eqref{eq:slutzky_theorem_proof_11}を\eqref{eq:slutzky_theorem_proof_8}に適用すると，
+\begin{equation}
+  \PP(|U_n V_n| > \epsilon) \leq \PP(|U_n| > \epsilon / \delta) + \PP(|V_n| > \delta)
+  \label{eq:slutzky_theorem_proof_12}
+\end{equation}
+が成り立つ．\eqref{eq:slutzky_theorem_proof_12}の$n \to \infty$での極限を取ると，$U_n \xrightarrow{d} U$，$V_n \xrightarrow{p} 0$であるから，
+\begin{align}
+  0 \leq \lim_{n \to \infty} \PP(|U_n V_n| > \epsilon) &\leq \lim_{n \to \infty} \PP(|U_n| > \epsilon / \delta) + \lim_{n \to \infty} \PP(|V_n| > \delta) \notag \\
+  &= \PP(|U| > \epsilon / \delta) + 0
+  \label{eq:slutzky_theorem_proof_13}
+\end{align}
+となる\footnote{$h(U_n) = |U_n|$と定義すれば$h(U_n) \xrightarrow{d} h(U)$が成り立つので，$|U_n| \xrightarrow{d} |U|$となり，$\lim_{n \to \infty} \PP(|U_n| > \epsilon / \delta) = \PP(|U| > \epsilon / \delta)$と書ける．}．
+$\delta \to \infty$とすると，\eqref{eq:slutzky_theorem_proof_13}の右辺は$0$に収束するので，$U_n V_n \xrightarrow{p} 0$が示される．
+\end{proof}
+
+\subsection{順序統計量}
+r.v. $X_1, \dots, X_n$を確率分布$P$から\hyperref[def:random_sample]{無作為標本} とする．例によって，この標本から母集団の平均$\mu$や分散$\sigma^2$を推定する問題を考える．このとき，$X_1, \dots, X_n$の値のみが推定に必要であり，その順番は不必要な情報だと考えられる．そこで，$n$個の標本を昇順に並べ替えた$(X_{(1)}, X_{(2)}, \dots, X_{(n)})$を\hyperlink{def:statistic}{統計量}と考え，これを元に推定をするのが自然である．
+
+\begin{mydefinition}{順序統計量(order statistics)}
+\label{def:order_statistics} % ラベルを付けて後から参照
+$X_1, \dots, X_n$を確率分布$P$から\hyperref[def:random_sample]{無作為標本}，すなわち$X_1, \dots, X_n$ i.i.d. $\sim P$とする．小さい順に並べ替えたものを$X_{(1)} \leq X_{(2)} \leq \dots \leq X_{(n)}$で表し\textbf{順序統計量}(order statistics)という．
+\end{mydefinition}
+
+$x_1 < x_2 < \dots < x_n$とし，$x_1 , x_2, \dots , x_n$上に確率を持つ離散型r.v.を考える．ここで或る1つの標本$X_1$について，
+\begin{equation}
+  \PP(X_1 = x_i) = p_i, \quad P_i = \PP(X_1 \leq x_i)
+  \label{eq:discrete_rv}
+\end{equation}
+とおく．このとき，$P_0 =0, P_1 =p_1, \dots, P_i = p_1 + p_2 + \dots + p_i  , \quad (i=1, \dots, n)$となる．
+
+\begin{myproposition}{}
+\label{prop:order_statistics_discrete} % ラベルを付けて後から参照
+$X_{(j)}$の分布関数は次で与えられる．
+\begin{equation}
+  \PP(X_{(j)} \leq x_i) = \sum_{k=j}^{n} \binom{n}{k} P_i^k (1-P_i)^{n-k}
+\end{equation}
+
+\end{myproposition}
+
+\begin{proof}  
+  
+  標本$X_1, \dots, X_n$の中の或るサンプル$X_k$に注目する．$x_i \in \R$を固定し，
+  \begin{align*}
+    X_k &\leq x_i \quad \text{なら"成功"} \\
+    X_k &> x_i \quad \text{なら"失敗"}
+  \end{align*}
+  という事象を考える．このとき\eqref{eq:discrete_rv}から，$X_k$が"成功"，"失敗"する確率はそれぞれ，
+  \begin{equation}
+    \begin{split}
+      \PP(X_k \leq x_i) &= P_i  \\
+      \PP(X_k > x_i) &= 1 - P_i 
+    \end{split}
+  \end{equation}
+  となり，この事象は標本空間を$\Omega = \{X_k \leq x_i, X_k > x_i\}$ と定めたベルヌーイ試行である．更に，$(\Omega, \PP)$上のr.v. $Z_k: \Omega \to \R$を
+  \begin{equation}
+    Z_k = \begin{cases}
+      1 & (X_k \leq x_i) \\
+      0 & (X_k > x_i)
+    \end{cases}
+  \end{equation}
+  により定める．$X_1, \dots, X_n$ i.i.d. $\sim P$ より，$Z_1, \dots, Z_n$も互いに独立である．
+
+  新しいr.v. $Y = \sum_{k=1}^{n} Z_k$を考えると，$Y$は$n$回のベルヌーイ試行の成功回数を表すので，$Y \sim Bin(n,P_i)$となる．すなわち，
+  \begin{equation}
+    \PP(Y = k) = \binom{n}{k} P_i^k (1-P_i)^{n-k}, \quad k=0, 1, \dots, n
+  \end{equation}
+ である．
+
+  さて，$X_{(j)} \leq x_i$ は，標本$X_1, \dots, X_n$の少なくとも$j$個が$x_i$以下であるという意味である．これはr.v. $Y$が少なくとも$j$回成功する，つまり$Y \geq j$であることと同値である．したがって，
+  \begin{align}
+    \PP(X_{(j)} \leq x_i) &= \PP(Y \geq j) = \sum_{k=j}^{n} \PP (Y=k) \notag \\
+                          &= \sum_{k=j}^{n} \binom{n}{k} P_i^k (1-P_i)^{n-k}
+  \end{align}
+  となる．
+\end{proof}
+
+\begin{myproofnote}[証明の補足：\quad 事象$\{X_{(j)} \leq x_i\}$と事象$\{Y \geq j\}$の同値性，$\{ X_{(j)} \le x_i \} \;\Leftrightarrow\; \{ Y \ge j \} $]
+$X_{(j)} \leq x_i$ は「標本$X_1, \dots, X_n$の中の$j$番目に小さい値が$x_i$以下である」ということである．このとき，
+\begin{equation*}
+  X_{(1)} \leq X_{(2)} \leq \dots \leq X_{(j)} \leq x_i
+\end{equation*}
+が成り立つ．したがって，標本$X_1, \dots, X_n$の中に$x_i$以下の値が少なくとも$j$個存在することになる．$Y$は$x_i$以下となった標本の個数を表すr.v.であるから，$Y \geq j$ となる．
+
+
+逆に，$Y \geq j$ は，「標本$X_1, \dots, X_n$の中に$x_i$以下の値が少なくとも$j$個存在する」ことである．このとき仮に，$X_{(j)} > x_i$ であったとすると,
+\begin{equation*}
+  X_{(1)} \leq X_{(2)} \leq \dots \leq X_{(j-1)} \leq x_i < X_{(j)}
+\end{equation*}
+となり，標本$X_1, \dots, X_n$の中に$x_i$以下の値は高々$j-1$個しか存在しない，つまり$Y \leq j-1$ということになる．これは$Y \geq j$ と矛盾する．したがって，$Y \geq j$ ならば，$X_{(j)} \leq x_i$ である．
+\end{myproofnote}
+
+\end{document}

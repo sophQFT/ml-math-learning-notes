@@ -1,0 +1,25 @@
+\documentclass[12pt, a4paper, uplatex, dvipdfmx]{jsarticle}
+
+% 設定ファイルを読み込む
+\input{preamble.tex}
+
+% タイトル情報
+\title{久保川 現代数理統計学の基礎 行間ノート}
+\author{\Large soph\thanks{\url{https://github.com/sophQFT}}}
+\date{最終更新：\today}
+
+\begin{document}
+
+\maketitle
+
+\setcounter{tocdepth}{2}
+\tableofcontents
+\clearpage
+
+% ここで分割したファイルを呼び出す
+\subfile{section1}
+% \subfile{section2} % 増えたら追加していく
+\subfile{section2}
+\subfile{section3}
+
+\end{document}

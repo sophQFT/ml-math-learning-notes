@@ -1,0 +1,382 @@
+% --- （ここにあなたが用意されたパッケージ群をそのまま貼りました） ---
+\usepackage{comment}    % 複数行コメントを可能にする
+\usepackage{float}      % 図表の配置を制御
+\usepackage{color}      % 色を扱う
+\usepackage{multicol}   % 複数列レイアウトをサポート
+\usepackage[dvipdfmx]{pict2e} % 高品質な描画命令（日本語PDF対応）
+\usepackage{wrapfig}    % 本文中に図をラップさせる
+\usepackage{graphicx}   % 画像挿入用
+\usepackage{url}        % URLの適切な表示
+\usepackage{underscore} % アンダースコアを文字列として扱う
+\usepackage{colortbl}   % 表のセルに色をつける
+\usepackage{tabularx}   % 自動列幅調整可能な表の作成
+\usepackage{fancyhdr}   % ヘッダー・フッターのカスタマイズ
+\usepackage{ulem}       % 下線や取り消し線の追加
+\usepackage{cite}       % 文献の引用を整理
+\usepackage{amsmath,amssymb,amsfonts} % 数式関連の基本パッケージ群
+\usepackage{algorithmic} % アルゴリズムの記述
+\usepackage{textcomp}   % 特殊記号をサポート
+\usepackage{xcolor}     % 拡張された色設定を使用可能にする
+\usepackage[ipaex]{pxchfon} % 日本語フォント（IPAフォント）を指定
+\usepackage{amsthm}     % 定理環境をサポート
+\usepackage{dsfont}     % ブラックボードボールド体などをサポート
+\usepackage{mathtools}  % 数式関連の拡張
+\usepackage{siunitx}    % 科学技術単位を統一した形式で表記
+\usepackage[thicklines]{cancel} % 数式内での取り消し線
+\renewcommand{\CancelColor}{\color[rgb]{0.7,0,0}}
+\usepackage{nccmath}    % 数式のスペースを調整
+\usepackage{enumitem}  % 箇条書きのカスタマイズ
+
+% hyperrefと色の設定
+\usepackage[
+    colorlinks=true,    
+    linkcolor=blue,     % 内部リンクは青色
+    citecolor=green     % 参考文献は緑色
+]{hyperref}
+
+\renewcommand{\bibname}{参考文献}
+
+\usepackage{tcolorbox} % 箱を作成
+\tcbuselibrary{breakable, skins, theorems}
+\usepackage{tikz}
+\usetikzlibrary{calc,decorations.pathmorphing,arrows.meta,shadows,shapes.geometric,arrows}
+
+\usepackage{ifthen}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+
+%%%%%%mathtools%%%%%
+\allowdisplaybreaks % align pagebreak
+%\mathtoolsset{showonlyrefs=true} % 被参照数式のみ数式番号割り振り
+\numberwithin{equation}{section} % 数式番号をセクションごとにリセット
+
+\makeatletter
+\@addtoreset{equation}{section}
+\makeatother
+
+%---------- 追加: 定理環境・スタイル ----------%
+
+%%%%%%theorem environments%%%%%
+\newtheoremstyle{mystyle}%   % スタイル名
+    {}%                      % 上部スペース
+    {}%                      % 下部スペース
+    {\normalfont}%          % 本文フォント
+    {}%                      % インデント量
+    {\bf}%                  % 見出しフォント
+    {.}%                      % 見出し後の句読点
+    {\newline}%                     % 見出し後のスペース
+    {\underline{\thmname{#1}\thmnumber{#2}\thmnote{（#3）}}}%
+    % 見出しの書式 (can be left empty, meaning `normal')
+\theoremstyle{mystyle} % スタイルの適用
+
+\newtheorem{theorem}{定理}[section]
+\newtheorem{definition}{定義}[section]
+\newtheorem{proposition}[definition]{命題}
+\newtheorem{corollary}[theorem]{系}
+\newtheorem{example}{例}[section]
+
+\theoremstyle{remark}
+\newtheorem{remark}{注意}[section]
+
+%% === 証明環境の外観 ===
+\makeatletter
+\renewcommand{\qedsymbol}{$\blacksquare$}
+\renewenvironment{proof}[1][\proofname]{\par
+    \pushQED{\qed}%
+    \normalfont \topsep6\p@\@plus6\p@\relax
+    \trivlist
+    \item[\hskip\labelsep
+        \itshape
+    \textbf{#1}]\ignorespaces
+}{%
+    \popQED\endtrivlist\@endpefalse
+}
+\makeatother
+
+% ① カウンターの定義
+\newcounter{defcounter}[section] % sectionごとにリセットされるカウンターを作成
+\renewcommand{\thedefcounter}{\thesection.\arabic{defcounter}} % 表示形式を「1.1」のようにする
+
+% ② 新しい環境「mydefinition」の定義
+% #1 には「無作為標本」などのタイトルが入る
+\newenvironment{mydefinition}[1]{
+  \refstepcounter{defcounter} % カウンターを1つ増やし、参照可能にする
+  \begin{definitionbox}{\underline{定義 \thedefcounter: \quad #1} } % 自動で番号を付けてdefinitionboxを開始
+}{
+  \end{definitionbox} % definitionboxを終了
+}
+% --------------------------
+% ---- Definition Palette (緑系・好みで調整) ----
+\definecolor{DfGreen}{RGB}{32,138,87}    % アクセント緑（落ち着きめ）
+\colorlet{DfGreenLine}{DfGreen!80!black} % 線用（やや落とした緑）
+\colorlet{DfGreenLite}{DfGreen!6!white}  % ごく薄い緑の塗り
+\colorlet{DfGreenHair}{DfGreen!30!black} % 補助線（必要なら）
+% -----------------------------------------------
+
+% ---- definitionbox（theorembox と同じ骨格）----
+\newtcolorbox{definitionbox}[2][]{
+  enhanced, breakable,
+  colback=DfGreenLite, colframe=white, frame hidden, boxrule=0pt,
+  borderline west={1pt}{0pt}{DfGreenLine}, % 左キーラインのみ
+  top=2mm, bottom=2mm, left=1.6mm, right=1.6mm,
+  before skip=6pt, after skip=10pt,
+  fonttitle=\bfseries, coltitle=black, title=#2,
+  #1
+}
+
+% --- 共通カウンター（セクションごとにリセット） ---
+\newcounter{theocounter}[section]
+\renewcommand{\thetheocounter}{\thesection.\arabic{theocounter}}
+
+% ---- Blue Palette（既存と同じ） ----
+\definecolor{ThBlue}{RGB}{36,99,190}      % アクセント青（中間）
+\colorlet{ThBlueLine}{ThBlue!100!black}   % 線用
+\colorlet{ThBlueLite}{ThBlue!6!white}     % ごく薄い塗り
+\colorlet{ThBlueHair}{ThBlue!30!black}    % ヘアライン（未使用でもOK）
+% ------------------------------------
+
+% ---- 共通ボックス骨格（既存と同じ見た目） ----
+\newtcolorbox{theorembox}[2][]{
+  enhanced, breakable,
+  colback=ThBlueLite, colframe=white, frame hidden, boxrule=0pt,
+  borderline west={1pt}{0pt}{ThBlueLine},
+  top=2mm, bottom=2mm, left=1.6mm, right=1.6mm,
+  before skip=6pt, after skip=10pt,
+  fonttitle=\bfseries, coltitle=black, title=#2,
+  #1
+}
+% ------------------------------------
+
+% ===== 定理 =====
+% 使い方: \begin{mytheorem}[<label>]{<定理の名称>} ... \end{mytheorem}
+\newenvironment{mytheorem}[2][]
+{
+  \refstepcounter{theocounter}
+  \ifthenelse{\equal{#1}{}}
+    {\begin{theorembox}{\underline{定理 \thetheocounter: \quad #2}}}
+    {\begin{theorembox}[label={#1}]{\underline{定理 \thetheocounter: \quad #2}}}
+}
+{\end{theorembox}}
+
+% ===== 命題 =====
+% 使い方: \begin{myproposition}[<label>]{<命題の名称>} ... \end{myproposition}
+\newenvironment{myproposition}[2][]
+{
+  \refstepcounter{theocounter}
+  \ifthenelse{\equal{#1}{}}
+    {\begin{theorembox}{\underline{命題 \thetheocounter: \quad #2}}}
+    {\begin{theorembox}[label={#1}]{\underline{命題 \thetheocounter: \quad #2}}}
+}
+{\end{theorembox}}
+
+% ===== 補題 =====
+% 使い方: \begin{mylemma}[<label>]{<補題の名称>} ... \end{mylemma}
+\newenvironment{mylemma}[2][]
+{
+  \refstepcounter{theocounter}
+  \ifthenelse{\equal{#1}{}}
+    {\begin{theorembox}{\underline{補題 \thetheocounter: \quad #2}}}
+    {\begin{theorembox}[label={#1}]{\underline{補題 \thetheocounter: \quad #2}}}
+}
+{\end{theorembox}}
+
+
+
+% =========================
+%  例 (Example) 環境一式
+% =========================
+
+% ① 例用のカウンター（セクションごとにリセット）
+\newcounter{excounter}[section]
+\renewcommand{\theexcounter}{\thesection.\arabic{excounter}}
+
+% ---- Palette (好みで調整) ----
+\definecolor{ExOrange}{RGB}{209,118,30}   % アクセント橙（落ち着きめ）
+\colorlet{ExOrangeLine}{ExOrange!95!black}
+\colorlet{ExOrangeLite}{ExOrange!6!white}
+\colorlet{ExOrangeHair}{ExOrange!30!black}
+% --------------------------------
+
+% ② tcolorbox の骨格（definition/theorem と同様）
+\newtcolorbox{examplebox}[2][]{
+  enhanced, breakable,
+  colback=ExOrangeLite, colframe=white, frame hidden, boxrule=0pt,
+  borderline west={1pt}{0pt}{ExOrangeLine},
+  top=2mm, bottom=2mm, left=1.6mm, right=1.6mm,
+  before skip=6pt, after skip=10pt,
+  fonttitle=\bfseries, coltitle=black, title=#2,
+  #1
+}
+
+% ③ 新しい環境「myexample」の定義
+% 使い方: \begin{myexample}[<ラベル>]{<例の名称>}
+% 例: \begin{myexample}[ex:lln]{大数の法則の直感}
+\newenvironment{myexample}[2][]
+{
+  \refstepcounter{excounter}% カウンターを進めて参照可能に
+  \ifthenelse{\equal{#1}{}}
+  { % ラベルなし
+    \begin{examplebox}{\underline{例 \theexcounter: \quad #2}}
+  }
+  { % ラベルあり
+    \begin{examplebox}[label={#1}]{\underline{例 \theexcounter: \quad #2}}
+  }
+}
+{
+  \end{examplebox}
+}
+
+
+\newtcolorbox{bluebox}{
+  breakable,
+  colback=blue!5!white,
+  colframe=blue!75!black,
+  left=1mm, right=1mm, top=1mm, bottom=1mm,
+  boxrule=0.5pt,
+  arc=2pt
+}
+
+\newtcolorbox{remarkbox}{
+  breakable,
+  colback=yellow!5,
+  colframe=yellow!60!black,
+  left=1mm, right=1mm, top=1mm, bottom=1mm,
+  boxrule=0.5pt,
+  arc=2pt
+}
+\newtcolorbox{greenbox}{
+  breakable,
+  colback=green!5,
+  colframe=green!50!black,
+  left=1mm, right=1mm, top=1mm, bottom=1mm,
+  boxrule=0.5pt,
+  arc=2pt
+}
+
+% =========================
+%  Yellow Note/Attention Boxes（カウンター無し）
+% =========================
+
+% ---- Yellow Palette ----
+\definecolor{NtYellow}{RGB}{230,170,0}     % アクセント黄（アンバー寄り）
+\colorlet{NtYellowLine}{NtYellow!90!black} % 左ライン用
+\colorlet{NtYellowLite}{NtYellow!7!white}  % 薄い塗り
+% ------------------------
+
+% ---- 共通ボックス骨格 ----
+\newtcolorbox{notebox}[2][]{
+  enhanced, breakable,
+  colback=NtYellowLite, colframe=white, frame hidden, boxrule=0pt,
+  borderline west={1pt}{0pt}{NtYellowLine}, % 左キーライン
+  top=2mm, bottom=2mm, left=1.6mm, right=1.6mm,
+  before skip=6pt, after skip=10pt,
+  fonttitle=\bfseries, coltitle=black, title=#2,
+  #1
+}
+
+% =========================
+%  環境：補足／メモ／注意
+%  使い方：
+%   \begin{myproofnote} ... \end{myproofnote}
+%   \begin{mynote} ... \end{mynote}
+%   \begin{myattention} ... \end{myattention}
+%  任意タイトルにしたいとき：
+%   \begin{mynote}[計算メモ] ... \end{mynote}
+% =========================
+
+% 補足（デフォルト見出し：補足）
+\newenvironment{myproofnote}[1][補足]
+  {\begin{notebox}{\underline{#1}}}
+  {\end{notebox}}
+
+% メモ（デフォルト見出し：メモ）
+\newenvironment{mynote}[1][メモ]
+  {\begin{notebox}{\underline{#1}}}
+  {\end{notebox}}
+
+% 注意（デフォルト見出し：注意）
+\newenvironment{myattention}[1][注意]
+  {\begin{notebox}{\underline{#1}}}
+  {\end{notebox}}
+
+
+
+%---------- package ----------% 
+%--- physics2 ---%
+\usepackage{physics2}
+\usephysicsmodule{ab}   % 括弧サイズの自動調整
+\usephysicsmodule{ab.braket}    % braket記法
+\usephysicsmodule{diagmat}  % 対角行列
+\usephysicsmodule[showleft=2,showtop=2]{xmat}   % n×m行列
+%--- physics2 END ---%
+
+
+
+%---------- 追加: 確率統計で便利なマクロ ----------%
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\EE}{\mathbb{E}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\ind}{\mathds{1}} % 指示関数
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\indep}{\perp\!\!\!\perp}
+
+% ベクトル
+\usepackage{bm}
+%--- 微分演算子 ---%
+\usepackage{fixdif}
+\usepackage{derivative}
+%--- 微分演算子 END ---%
+% 花文字
+\usepackage{mathrsfs}
+%---------- package END ----------% 
+
+%---------- newcommand ----------% 
+% 積分値の評価
+\newcommand{\eval}[1]{\left.#1\right|}
+% Landau記号
+\newcommand{\order}[1]{\mathcal{O}\ab(#1)}
+%--- physicsパッケージの\vbコマンドを再現 --%
+\makeatletter
+\newcommand\vb{\@ifstar\boldsymbol\mathbf}
+\newcommand\va[1]{\@ifstar{\vec{#1}}{\vec{\mathrm{#1}}}}
+\newcommand\vu[1]{%
+\@ifstar{\hat{\boldsymbol{#1}}}{\hat{\mathbf{#1}}}}
+\makeatother
+%--- physicsパッケージの\vbコマンドを再現 END --%
+%--- 勾配・発散・回転 ---%
+% 勾配
+\DeclareMathOperator{\grad}{\nabla}
+% 発散
+% \divが「÷」と競合するため再定義
+\DeclareMathOperator{\divergence}{\nabla\cdot}
+\let\divisionsymbol\div 
+\renewcommand{\div}{\divergence} 
+% 回転
+\DeclareMathOperator{\rot}{\nabla\times}
+%--- 勾配・発散・回転 END ---%
+% 実部
+\renewcommand{\Re}{\operatorname{Re}}
+% 虚部
+\renewcommand{\Im}{\operatorname{Im}}
+% トレース
+\newcommand{\Tr}{\operatorname{Tr}}
+% rank
+\newcommand{\rank}{\operatorname{rank}}
+% \mqtyコマンド
+\newcommand{\mqty}[1]{\begin{matrix}#1\end{matrix}}
+%---------- newcommand END ----------% 
+
+\usepackage[top=30truemm,bottom=30truemm,left=25truemm,right=25truemm]{geometry}
+\usepackage{footmisc}
+\renewcommand{\thefootnote}{[\arabic{footnote}] }
+\renewcommand{\footnoterule}{
+    \vspace{2mm}%
+    \noindent\rule{\textwidth}{0.4pt}%
+    \vspace{2mm}%
+}
+\setlength{\skip\footins}{12pt} 
+\setlength{\footnotesep}{15pt}  
+\interfootnotelinepenalty=10000
+
+\usepackage{subfiles}
