@@ -17,15 +17,17 @@
 Dive into Deep Learning 輪読ゼミで作成したソフトマックス回帰の発表資料です。  
 線形モデル、ソフトマックス関数、ボルツマン分布との対応、交差エントロピー損失、PyTorchによるFashion-MNISTの読み込みなどを整理しています。
 
-- Slide: `slides/d2l-softmax-regression/softmax-regression-d2l.pdf`
-- Source: `slides/d2l-softmax-regression/main.tex`
+- [Slide PDF](slides/d2l-softmax-regression/softmax-regression-d2l.pdf)
+- [TeX source](slides/d2l-softmax-regression/main.tex)
+- [Slide folder](slides/d2l-softmax-regression/)
 
 ### 2. Mathematical Statistics Notes
 
 久保川『現代数理統計学の基礎』を学習する中で作成した行間補足ノートです。  
 標本分布、不偏性、ヘルマート行列を用いた独立性の証明、確率収束、大数の弱法則、中心極限定理、スラツキーの定理などを整理しています。
 
-- Notes: `notes/statistics/kubokawa-math-statistics/`
+- [Notes folder](notes/statistics/kubokawa-math-statistics/)
+- [Full PDF](notes/statistics/kubokawa-math-statistics/pdf/kubokawa-math-statistics-notes.pdf)
 
 ## Contents
 
