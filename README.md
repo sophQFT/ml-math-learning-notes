@@ -17,8 +17,9 @@
 Dive into Deep Learning 輪読ゼミで作成したソフトマックス回帰の発表資料です。  
 線形モデル、ソフトマックス関数、ボルツマン分布との対応、交差エントロピー損失、PyTorchによるFashion-MNISTの読み込みなどを整理しています。
 
-- [Slide PDF](slides/d2l-softmax-regression/softmax-regression-d2l.pdf)
 - [Slide folder](slides/d2l-softmax-regression/)
+- [Slide PDF](slides/d2l-softmax-regression/softmax-regression-d2l.pdf)
+
 
 ### 2. Mathematical Statistics Notes
 
