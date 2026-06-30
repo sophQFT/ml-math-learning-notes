@@ -1,0 +1,1164 @@
+% !TEX program = latexmk
+% Compile example:
+% latexmk -pdfdvi -latex='uplatex -synctex=1 -interaction=nonstopmode -file-line-error' -dvipdf='dvipdfmx %O -o %D %S' d2l_why_conv_seminar_beamer.tex
+
+\documentclass[dvipdfmx,uplatex,unicode,9pt,aspectratio=169]{beamer}
+
+% ------------------------------------------------------------
+% Japanese / PDF settings
+% ------------------------------------------------------------
+\usepackage{bxdpx-beamer}
+\usepackage{pxjahyper}
+\usepackage{amsmath,amssymb,bm,mathtools}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,decorations.pathreplacing,fit,matrix}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{listings}
+\lstdefinestyle{pytorch}{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{green!40!black},
+  stringstyle=\color{orange!60!black},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  framerule=0.2pt,
+  rulecolor=\color{black!25},
+  backgroundcolor=\color{black!3},
+  columns=fullflexible,
+  keepspaces=true,
+  xleftmargin=2mm,
+  xrightmargin=2mm
+}
+\lstset{style=pytorch}
+
+% ------------------------------------------------------------
+% Custom boxes
+% ------------------------------------------------------------
+\usepackage[most]{tcolorbox}
+
+\tcbset{
+  seminarboxstyle/.style={
+    enhanced,
+    colback=softblue,
+    colframe=mainblue,
+    boxrule=0.8pt,
+    arc=2mm,
+    left=1.5mm,
+    right=1.5mm,
+    top=1.2mm,
+    bottom=1.2mm,
+    before skip=0.6em,
+    after skip=0.6em,
+    fonttitle=\bfseries,
+    coltitle=white,
+    colbacktitle=mainblue,
+    attach boxed title to top left={
+      xshift=2mm,
+      yshift=-2mm
+    },
+    boxed title style={
+      colback=mainblue,
+      colframe=mainblue,
+      arc=1mm,
+      boxrule=0pt
+    }
+  }
+}
+
+% タイトルあり・なしの両方で使える箱
+\newtcolorbox{seminarbox}[1][]{
+  seminarboxstyle,
+  #1
+}
+
+% 注意用のオレンジ箱
+\newtcolorbox{seminaralertbox}[1][]{
+  enhanced,
+  colback=softorange,
+  colframe=accentorange,
+  boxrule=0.8pt,
+  arc=2mm,
+  left=1.5mm,
+  right=1.5mm,
+  top=1.2mm,
+  bottom=1.2mm,
+  before skip=0.6em,
+  after skip=0.6em,
+  fonttitle=\bfseries,
+  coltitle=white,
+  colbacktitle=accentorange,
+  attach boxed title to top left={
+    xshift=2mm,
+    yshift=-2mm
+  },
+  boxed title style={
+    colback=accentorange,
+    colframe=accentorange,
+    arc=1mm,
+    boxrule=0pt
+  },
+  #1
+}
+
+% ------------------------------------------------------------
+% Beamer style
+% ------------------------------------------------------------
+\usetheme{Madrid}
+\usefonttheme{professionalfonts}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\definecolor{mainblue}{RGB}{36,84,150}
+\definecolor{accentorange}{RGB}{226,122,47}
+\definecolor{softblue}{RGB}{232,240,252}
+\definecolor{softorange}{RGB}{255,239,224}
+\definecolor{softgray}{RGB}{245,245,245}
+\setbeamercolor{structure}{fg=mainblue}
+\setbeamercolor{frametitle}{fg=white,bg=mainblue}
+\setbeamercolor{title}{fg=white,bg=mainblue}
+\setbeamercolor{block title}{fg=white,bg=mainblue}
+\setbeamercolor{block body}{bg=softblue}
+\setbeamercolor{alerted text}{fg=accentorange}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\X}{\mathbf{X}}
+\newcommand{\Y}{\mathbf{Y}}
+\newcommand{\K}{\mathbf{K}}
+\newcommand{\Hid}{\mathbf{H}}
+\newcommand{\V}{\mathbf{V}}
+\newcommand{\Wten}{\mathsf{W}}
+\newcommand{\Vten}{\mathsf{V}}
+\newcommand{\Xten}{\mathsf{X}}
+\newcommand{\Hten}{\mathsf{H}}
+\newcommand{\U}{\mathbf{U}}
+\newcommand{\patch}{\mathcal{P}}
+
+\title[全結合層から畳み込みへ]{CNNとは：全結合層から畳み込みへ}
+\subtitle{Dive into Deep Learning 輪読ゼミ}
+\author{山口 海}
+\date{\today}
+
+\begin{document}
+
+% ------------------------------------------------------------
+\begin{frame}
+  \titlepage
+  \vspace{-1.5em}
+  \begin{center}
+    \footnotesize 参考: D2L-ja 7.1, \url{https://d2l-jp.me/chapter_convolutional-neural-networks/why-conv.html}
+  \end{center}
+\end{frame}
+
+%================================================
+\begin{frame}[allowframebreaks]{目次}
+  \tableofcontents[
+    sectionstyle=show,
+    subsectionstyle=show/show/show
+  ]
+\end{frame}
+
+%================================================
+\section{7.1. CNNとは: 全結合層から畳み込みへ}
+\begin{frame}{7.1. CNNとは: 全結合層から畳み込みへ}
+\begin{block}{問い}
+なぜ画像認識では，全結合層ではなく\alert{畳み込み層}を使うのか？
+\end{block}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{enumerate}
+ \item 画像は高次元で，そのまま全結合にするとパラメータが爆発する．
+  \item しかし画像には，位置関係や局所構造という強い規則性がある．
+  \item その規則性を\alert{帰納バイアス}としてモデルに入れる．
+  \item その結果として，自然に\alert{畳み込み}が現れる．
+\end{enumerate}
+\end{column}
+\begin{column}{0.44\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.58]
+\foreach \x in {0,...,4}{\foreach \y in {0,...,4}{\fill[mainblue!25] (\x,\y) rectangle +(0.85,0.85);}}
+\node at (2.2,-0.45) {画像：多数の画素};
+\foreach \y in {0,...,3}{\fill[accentorange!40] (6,\y+0.4) circle (0.18);}
+\node at (6,-0.45) {隠れ層};
+\foreach \x in {0,...,4}{\foreach \y in {0,...,4}{\draw[mainblue!25] (\x+0.42,\y+0.42) -- (6,2.0);}}
+\node[align=center] at (3.8,5.0) {全部つなぐと\\重みが爆発};
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+
+\begin{center}
+\begin{tikzpicture}[node distance=13mm, >=Latex]
+\node[draw, rounded corners, fill=softgray, minimum width=26mm, minimum height=9mm] (mlp) {全結合MLP};
+\node[draw, rounded corners, fill=softorange, right=of mlp, minimum width=26mm, minimum height=9mm] (bias) {画像の構造};
+\node[draw, rounded corners, fill=softblue, right=of bias, minimum width=28mm, minimum height=9mm] (conv) {畳み込み層};
+\draw[->, thick] (mlp) -- node[above]{制約} (bias);
+\draw[->, thick] (bias) -- node[above]{導出} (conv);
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{畳み込み層の計算イメージ}
+\begin{center}
+\begin{tikzpicture}[scale=0.63, >=Latex]
+% input grid
+\foreach \x in {0,...,5}{\foreach \y in {0,...,5}{\draw[mainblue!35] (\x,\y) rectangle +(0.8,0.8);}}
+\foreach \x in {2,3,4}{\foreach \y in {2,3,4}{\fill[accentorange!30] (\x,\y) rectangle +(0.8,0.8);\draw[accentorange] (\x,\y) rectangle +(0.8,0.8);}}
+\node at (2.4,-0.7) {入力画像 $\X$};
+\node[accentorange] at (3.2,5.4) {局所パッチ};
+
+% kernel
+\foreach \x in {0,...,2}{\foreach \y in {0,...,2}{\draw[accentorange] (7+\x,2+\y) rectangle +(0.8,0.8);}}
+\node at (8.2,1.3) {カーネル $\V$};
+
+% output grid
+\foreach \x in {0,...,3}{\foreach \y in {0,...,3}{\draw[mainblue!35] (12+\x,1+\y) rectangle +(0.8,0.8);}}
+\fill[mainblue!45] (13,2) rectangle +(0.8,0.8);
+\node at (13.6,0.3) {特徴マップ $\Hid$};
+
+\draw[->, thick] (5.3,3.2) -- node[above]{重み付き和} (6.8,3.2);
+\draw[->, thick] (9.8,3.2) -- node[above]{1つの値} (11.8,2.5);
+\end{tikzpicture}
+\end{center}
+
+\vspace{2mm}
+\begin{block}{1つの出力値の意味}
+入力画像の小さなパッチとカーネルの「一致度」を測ったスコアと考えられる．
+\end{block}
+\end{frame}
+
+%------------------------------------------------------------
+\begin{frame}{CNNに入れる2つの帰納バイアス}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{1. 平行移動等価性 / 不変性}
+同じ局所パターンが画像のどこに現れても，同じように反応してほしい．
+\[
+\text{位置がずれる} \Rightarrow \text{特徴マップもずれる}
+\]
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{2. 局所性}
+ある位置の特徴を計算するには，画像全体ではなく，その近くの画素だけ見ればよい．
+\[
+\text{近傍パッチ} \Rightarrow \text{局所特徴}
+\]
+\end{block}
+\end{column}
+\end{columns}
+
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}[>=Latex, scale=0.9]
+\node[draw, rounded corners, fill=softorange, minimum width=30mm, minimum height=9mm] (eq) at (0,0) {同じ検出器を使い回す};
+\node[draw, rounded corners, fill=softblue, minimum width=28mm, minimum height=9mm] (loc) at (5.2,0) {近所だけを見る};
+\node[draw, rounded corners, fill=softgray, minimum width=34mm, minimum height=9mm] (conv) at (2.6,-1.7) {畳み込み層};
+\draw[->, thick] (eq) -- (conv);
+\draw[->, thick] (loc) -- (conv);
+\end{tikzpicture}
+\end{center}
+\begin{block}{この節で理解したいこと}
+画像にMLPをそのまま使うとパラメータが多すぎる. しかし画像には,
+\alert{平行移動に対する性質}と\alert{局所性}がある. これらをMLPに制約として入れると,
+自然に\alert{畳み込み層}が出てくる.
+\end{block}
+
+\end{frame}
+
+% ------------------------------------------------------------
+\subsection{7.1.1. 不変性}
+
+\begin{frame}{7.1.1. 不変性: どこにあっても同じものは同じ}
+\begin{seminarbox}
+猫, 縦線, 目のような特徴は, 画像の左上にあっても右下にあっても,
+同じ種類の特徴として認識したい.
+\end{seminarbox}
+
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.48\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.55]
+  \draw[step=0.8,gray!60] (0,0) grid (5.6,4.0);
+  \draw[fill=accentorange!70] (0.8,2.4) rectangle (1.6,3.2);
+  \node at (2.8,-0.5) {左上に特徴};
+\end{tikzpicture}
+\end{column}
+\begin{column}{0.48\textwidth}
+
+\begin{tikzpicture}[scale=0.55]
+  \draw[step=0.8,gray!60] (0,0) grid (5.6,4.0);
+  \draw[fill=accentorange!70] (4.0,0.8) rectangle (4.8,1.6);
+  \node at (2.8,-0.5) {右下に特徴};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\begin{itemize}
+  \item 最終的な分類では, 多少位置が変わっても同じクラスと判断したい.
+  \item 中間層では, 入力をずらすと特徴マップの反応もずれる, という性質が欲しい.
+\end{itemize}
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.48\textwidth}
+\begin{block}{平行移動不変性}
+入力をずらしても, 出力が変わらない.
+\[
+  f(T\X)=f(\X)
+\]
+\end{block}
+\begin{itemize}
+  \item $\text{猫画像} \longmapsto \text{猫}$
+  \item $\text{右にずれた猫画像} \longmapsto \text{猫}$
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{平行移動等価性}
+入力をずらすと, 出力も同じようにずれる.
+\[
+  f(T\X)=T f(\X)
+\]
+\end{block}
+\begin{itemize}
+  \item 特徴が移動すると, 特徴マップ上の反応位置も移動する.
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+\subsection{7.1.2. MLPへの制約}
+\begin{frame}{7.1.2. MLPへの制約: 画像を2次元配列として扱う}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.63\textwidth}
+\begin{block}{ベクトル入力の全結合層}
+入力を $\bm{x}=(x_1,\dots,x_d)^\top$, 隠れ表現を $\bm{h}=(h_1,\dots,h_m)^\top$ とすると,
+\[
+  \bm{h}=\bm{W}\bm{x}+\bm{b}
+\]
+\[
+  h_i=b_i+\sum_{k=1}^{d}W_{i,k}x_k.
+\]
+\end{block}
+\end{column}
+\begin{column}{0.37\textwidth}
+\begin{itemize}
+  \item $h_i$ は隠れ層の $i$ 番目のユニット.
+  \item $x_k$ は入力の $k$ 番目の成分.
+  \item $W_{i,k}$ は「入力 $k$ が隠れユニット $i$ に与える重み」.
+\end{itemize}
+\begin{seminaralertbox}
+全結合層では, 各出力 $[\Hid]_{i,j}$  がすべての入力画素 $[\X]_{k,l}$ を見る.
+\end{seminaralertbox}
+\end{column}
+\end{columns}
+
+\vspace{0.6em}
+
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.52\textwidth}
+\begin{block}{ベクトルから行列へ}
+出力の位置が $(i,j)$, 入力の位置が $(k,l)$ なので,
+\[
+  [\Hid]_{i,j}
+  = [\U]_{i,j}
+  +\sum_k\sum_l [\Wten]_{i,j,k,l}[\X]_{k,l}.
+\]
+\end{block}
+
+\vspace{-0.3em}
+
+\begin{itemize}
+  \item ここでは簡単のため, $\X$ と $\Hid$ は同じ形状とする.
+  \item $[\U]_{i,j}$ は位置 $(i,j)$ のバイアス.
+\end{itemize}
+\end{column}
+\begin{column}{0.44\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.55]
+  % 入力画像 X
+  \draw[step=0.75,gray!65] (0,0) grid (4.5,3.75);
+  \node at (2.25,4.2) {$\X$};
+  \node[fill=accentorange!60,inner sep=2pt] at (2.625,2.625)
+    {$[\X]_{k,l}$};
+
+  % X から H への写像
+  \draw[-{Latex[length=2mm]},thick]
+    (5.0,1.875) -- (6.3,1.875)
+    node[midway,above=3pt] {$\Wten$};
+
+  % 隠れ表現 H
+  \draw[step=0.75,gray!65] (6.8,0) grid (11.3,3.75);
+  \draw[gray!65] (6.8,0) rectangle (11.3,3.75);
+  \node at (9.05,4.2) {$\Hid$};
+  \node[fill=softblue,inner sep=2pt] at (9.425,2.625)
+    {$[\Hid]_{i,j}$};
+\end{tikzpicture}
+
+入力画像と隠れ表現を，2次元の行列として扱う．
+\[
+  \X = \bigl([\X]_{i,j}\bigr),\qquad
+  \Hid = \bigl([\Hid]_{i,j}\bigr)
+\]
+\end{column}
+\end{columns}
+\end{frame}
+
+
+
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+\begin{frame}{添字を相対位置で書き直す}
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.55\textwidth}
+\begin{block}{パラメータ数の爆発}
+全結合では,
+\[
+  \text{入力画素数}\times \text{出力ユニット数}
+  =10^6\times10^6=10^{12}.
+\]
+\end{block}
+\end{column}
+\begin{column}{0.41\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.75]
+  \foreach \i in {0,...,3}{
+    \foreach \j in {0,...,3}{
+      \node[circle,draw,fill=softblue,minimum size=5pt,inner sep=0pt] (x\i\j) at (\i*0.6,\j*0.55) {};
+      \node[circle,draw,fill=softorange,minimum size=5pt,inner sep=0pt] (h\i\j) at (3.6+\i*0.6,\j*0.55) {};
+    }
+  }
+  \foreach \i in {0,...,3}{
+    \foreach \j in {0,...,3}{
+      \foreach \k in {0,...,3}{
+        \foreach \l in {0,...,3}{
+          \draw[gray!25] (x\i\j) -- (h\k\l);
+        }
+      }
+    }
+  }
+  \node at (0.9,2.55) {入力 $\X$};
+  \node at (4.5,2.55) {隠れ表現 $\Hid$};
+  \node[accentorange] at (2.7,-0.55) {全結合は接続が多すぎる};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\begin{block}{入力位置を出力位置からのズレで表す}
+出力位置 $(i,j)$ に対して, 入力位置 $(k,l)$ を
+\[
+  k=i+a,\qquad l=j+b
+\]
+と書く. ここで $(a,b)$ は出力位置から見た相対的なズレである.
+\end{block}
+\vspace{-0.4em}
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.55\textwidth}
+  \centering
+\begin{align*}
+  [\Hid]_{i,j}
+  &= [\U]_{i,j}
+  +\sum_k\sum_l [\Wten]_{i,j,k,l}[\X]_{k,l} \\
+  &= [\U]_{i,j}
+  +\sum_a\sum_b [\Vten]_{i,j,a,b}[\X]_{i+a,j+b}.
+\end{align*}
+\end{column}
+\begin{column}{0.41\textwidth}
+\begin{block}{対応関係}
+\[
+  [\Vten]_{i,j,a,b}
+  = [\Wten]_{i,j,i+a,j+b}.
+\]
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------------------
+\subsection{7.1.2.1. 平行移動不変性}
+\begin{frame}{7.1.2.1. 平行移動不変性}
+\begin{block}{重み共有: 平行移動に対する制約}
+重みとバイアスが出力位置 $(i,j)$ に依存しないと仮定する.
+\[
+  [\Vten]_{i,j,a,b}=[\V]_{a,b},
+  \qquad
+  [\U]_{i,j}=u.
+\]
+すると,
+\[
+  [\Hid]_{i,j}
+  =u+\sum_a\sum_b [\V]_{a,b}[\X]_{i+a,j+b}.
+\]
+\end{block}
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.52\textwidth}
+\begin{itemize}
+  \item $[\V]_{a,b}$は相対位置 $(a,b)$ だけで重みが決まる.
+  \item 同じ特徴検出器を画像全体に適用する.
+  \item これを\alert{重み共有}と呼ぶ.
+\end{itemize}
+\end{column}
+\begin{column}{0.42\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.6]
+  \draw[step=0.75,gray!60] (0,0) grid (5.25,3.75);
+  \foreach \x/\y in {0.75/2.25,2.25/1.5,3.75/0.75}{
+    \draw[very thick,accentorange] (\x,\y) rectangle +(1.5,1.5);
+  }
+  \node at (2.6,-0.5) {同じフィルタを使い回す};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\begin{block}{まだ残る問題}
+それでも, 各位置で画像全体に近い広い範囲を見ている. そこで次に局所性を入れる.
+\end{block}
+\end{frame}
+% ------------------------------------------------------------
+\subsection{7.1.2.2. 局所性}
+\begin{frame}{7.1.2.2. 局所性を式に入れる}
+\begin{block}{局所範囲だけを残す}
+ある $\Delta$ を決めて,
+\[
+  |a|>\Delta \quad \text{または}\quad |b|>\Delta
+  \quad \Longrightarrow \quad
+  [\V]_{a,b}=0
+\]
+とする.
+\end{block}
+
+すると,
+\[
+  [\Hid]_{i,j}
+  =u+
+  \sum_{a=-\Delta}^{\Delta}
+  \sum_{b=-\Delta}^{\Delta}
+  [\V]_{a,b}[\X]_{i+a,j+b}.
+\]
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.5\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.58]
+  \draw[step=0.7,gray!60] (0,0) grid (6.3,4.2);
+  \draw[fill=accentorange!15,very thick,accentorange] (2.1,1.4) rectangle (4.2,3.5);
+  \node[fill=mainblue!80,text=white,inner sep=1.5pt] at (3.15,2.45) {$(i,j)$};
+  \node[accentorange] at (3.15,4.65) {近傍だけを見る};
+\end{tikzpicture}
+\end{column}
+\begin{column}{0.46\textwidth}
+\begin{itemize}
+  \item 相対位置 $(a,b)$ が大きすぎるとき, 重みを0にする.
+  \item エッジや模様は局所パッチから分かる.
+  \item 遠く離れた画素との相互作用は, 深い層で段階的に扱えばよい.
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ------------------------------------------------------------
+\subsection{7.1.4. チャネル}
+\begin{frame}{7.1.4. チャネル: 画像は2次元ではなく3次元}
+\begin{block}{これまでの単純化}
+これまでは, 入力画像を2次元配列として
+\[
+  \X=\bigl([\X]_{i,j}\bigr)
+\]
+と書いていた.
+しかし, 実際のカラー画像は赤, 緑, 青の3つのチャネルを持つ.
+\end{block}
+
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.48\textwidth}
+\begin{itemize}
+  \item 画像の縦方向: 高さ.
+  \item 画像の横方向: 幅.
+  \item 各画素における成分: チャネル.
+\end{itemize}
+
+\[
+  \Xten \in \R^{H\times W\times C}
+\]
+\[
+  [\Xten]_{i,j,c}
+\]
+は, 位置 $(i,j)$ のチャネル $c$ の値.
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.62]
+  % RGB sheets
+  \foreach \s/\name/\col in {0/R/red!25,1/G/green!25,2/B/blue!25}{
+    \begin{scope}[shift={(0.35*\s,0.25*\s)}]
+      \draw[fill=\col,draw=gray!70] (0,0) rectangle (3.3,2.6);
+      \draw[step=0.55,gray!55] (0,0) grid (3.3,2.6);
+      \node at (3.75,2.15) {\name};
+    \end{scope}
+  }
+  \draw[-{Latex[length=2mm]},thick] (4.4,1.5) -- (5.7,1.5);
+  \node[align=center] at (7.4,1.5)
+  {$\Xten=\bigl([\Xten]_{i,j,c}\bigr)$\\
+   高さ $\times$ 幅 $\times$ チャネル};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\begin{block}{複数入力チャネルの場合}
+入力が $[\Xten]_{i,j,c}$ のようにチャネル $c$ を持つため,
+フィルタも $[\Vten]_{a,b,c}$ のようにチャネル方向の添字を持つ.
+したがって, 空間方向 $(a,b)$ だけでなくチャネル方向 $c$ についても和を取る.
+\end{block}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame}{複数入力チャネルの畳み込み}
+\begin{columns}[T,totalwidth=\textwidth]
+\begin{column}{0.52\textwidth}
+\begin{block}{1つの出力チャネルを作る場合}
+入力チャネル数を $C_{\mathrm{in}}$ とすると,
+\[
+  [\Hid]_{i,j}
+  =
+  \sum_{a=-\Delta}^{\Delta}
+  \sum_{b=-\Delta}^{\Delta}
+  \sum_{c=1}^{C_{\mathrm{in}}}
+  [\Vten]_{a,b,c}
+  [\Xten]_{i+a,j+b,c}.
+\]
+\end{block}
+
+\begin{itemize}
+  \item $a,b$: 局所パッチ内の相対位置.
+  \item $c$: 入力チャネル.
+  \item $[\Vten]_{a,b,c}$: 位置とチャネルごとの重み.
+\end{itemize}
+\end{column}
+
+\begin{column}{0.44\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.62]
+  % input stack
+  \foreach \s/\col in {0/red!20,1/green!20,2/blue!20}{
+    \begin{scope}[shift={(0.28*\s,0.18*\s)}]
+      \draw[fill=\col,draw=gray!70] (0,0) rectangle (2.7,2.2);
+      \draw[step=0.55,gray!55] (0,0) grid (2.7,2.2);
+    \end{scope}
+  }
+  \draw[red,very thick] (0.55,0.55) rectangle (1.65,1.65);
+  \node at (1.7,2.9) {入力 $\Xten$};
+
+  % filter stack
+  \foreach \s/\col in {0/red!35,1/green!35,2/blue!35}{
+    \begin{scope}[shift={(4.2+0.28*\s,0.35+0.18*\s)}]
+      \draw[fill=\col,draw=accentorange] (0,0) rectangle (1.1,1.1);
+      \draw[step=0.55,accentorange!70] (0,0) grid (1.1,1.1);
+    \end{scope}
+  }
+  \node at (5.0,2.4) {フィルタ $\Vten$};
+
+  \draw[-{Latex[length=2mm]},thick] (6.3,1.2) -- (7.3,1.2);
+
+  % output
+  \draw[fill=softblue,draw=mainblue] (7.7,0.8) rectangle (8.3,1.4);
+  \node at (8.0,2.1) {$[\Hid]_{i,j}$};
+\end{tikzpicture}
+
+\vspace{0.6em}
+\small
+RGBそれぞれの局所パッチに重みを掛けて, すべて足し合わせる.
+\end{column}
+\end{columns}
+\begin{block}{隠れ表現にもチャネルを持たせる}
+入力チャネルを $c$, 出力チャネルを $d$ とすると,
+\[
+  [\Hten]_{i,j,d}
+  =
+  \sum_{a=-\Delta}^{\Delta}
+  \sum_{b=-\Delta}^{\Delta}
+  \sum_c
+  [\Vten]_{a,b,c,d}
+  [\Xten]_{i+a,j+b,c}.
+\]
+\end{block}
+\end{frame}
+
+% ------------------------------------------------------------
+\subsection{7.1.5. 要約と考察}
+
+\begin{frame}{7.1.5. 要約: CNNは第一原理から理解できる}
+\begin{enumerate}
+  \item 画像を全結合層で扱うと，パラメータ数が大きくなりすぎる．
+  \item 画像には，平行移動等価性と局所性という自然な構造がある．
+  \item これらをMLPに制約として課すと，畳み込み層が現れる．
+  \item 畳み込み層は，小さなカーネルを全位置で共有して特徴マップを作る．
+  \item 複数チャネルにより，多種類の局所特徴を同時に学習できる．
+\end{enumerate}
+
+\vspace{3mm}
+\begin{center}
+\begin{tikzpicture}[>=Latex, node distance=8mm]
+\node[draw, rounded corners, fill=softgray] (problem) {パラメータ爆発};
+\node[draw, rounded corners, fill=softorange, right=of problem] (bias) {画像の帰納バイアス};
+\node[draw, rounded corners, fill=softblue, right=of bias] (conv) {畳み込み層};
+\draw[->, thick] (problem) -- (bias);
+\draw[->, thick] (bias) -- (conv);
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\section{7.2. 画像のための畳み込み}
+\begin{frame}{7.2. 画像のための畳み込み}
+\begin{block}{この節で学ぶこと}
+前節では，画像に対して全結合層をそのまま使うのではなく，\alert{局所性}と\alert{重み共有}を使うと畳み込み層が自然に現れることを見た．
+この節では，実際に畳み込み層がどのように計算されるかを，コードと数値例で確認する．
+\end{block}
+
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.50\textwidth}
+\begin{enumerate}
+  \item 相互相関演算を手で計算する．
+  \item それを \texttt{corr2d} として実装する．
+  \item エッジ検出の例を見る．
+  \item カーネルをデータから学習する．
+  \item 特徴マップと受容野を理解する．
+\end{enumerate}
+\end{column}
+\begin{column}{0.45\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.64,>=Latex]
+  \foreach \x in {0,...,5}{\foreach \y in {0,...,4}{\draw[mainblue!35] (\x,\y) rectangle +(0.75,0.75);}}
+  \foreach \x in {1,2}{\foreach \y in {2,3}{\fill[accentorange!30] (\x,\y) rectangle +(0.75,0.75);\draw[accentorange,thick] (\x,\y) rectangle +(0.75,0.75);}}
+  \node at (2.2,-0.55) {入力画像};
+  \draw[->,thick] (5.0,2.2) -- (6.5,2.2);
+  \foreach \x in {0,...,3}{\foreach \y in {0,...,2}{\draw[mainblue!35] (7+\x,1+\y) rectangle +(0.75,0.75);}}
+  \fill[mainblue!40] (7.75,2.5) rectangle +(0.75,0.75);
+  \node at (8.5,0.45) {特徴マップ};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\begin{seminaralertbox}
+ここでの「畳み込み」は，深層学習の慣習では実際には\alert{相互相関演算}を指すことが多い．厳密な数学用語とは少しずれるので注意する．
+\end{seminaralertbox}
+\end{frame}
+
+\subsection{7.2.1. 相互相関演算}
+
+\begin{frame}{7.2.1. 相互相関演算：何を計算しているか}
+\begin{block}{基本アイデア}
+小さなカーネルを入力画像の上でスライドさせる．各位置で，\alert{重なった要素どうしを掛け算して足し合わせる}．その1つの値が出力の1画素になる．
+\end{block}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.72,>=Latex]
+  % input 3x3
+  \foreach \i/\row in {0/{0,1,2},1/{3,4,5},2/{6,7,8}}{}
+  \foreach \x/\v in {0/0,1/1,2/2}{\node[draw,minimum size=8mm,fill=accentorange!20] at (\x,-0) {\v};}
+  \foreach \x/\v in {0/3,1/4,2/5}{\node[draw,minimum size=8mm,fill=accentorange!20] at (\x,-1) {\v};}
+  \foreach \x/\v in {0/6,1/7,2/8}{\node[draw,minimum size=8mm,fill=softgray] at (\x,-2) {\v};}
+  \draw[accentorange,very thick] (-0.4,0.4) rectangle (1.4,-1.4);
+  \node at (1,-2.8) {入力 $\X$};
+
+  % kernel
+  \node[draw,minimum size=8mm,fill=accentorange!20] at (4,0) {0};
+  \node[draw,minimum size=8mm,fill=accentorange!20] at (5,0) {1};
+  \node[draw,minimum size=8mm,fill=accentorange!20] at (4,-1) {2};
+  \node[draw,minimum size=8mm,fill=accentorange!20] at (5,-1) {3};
+  \node at (4.5,-2.0) {カーネル $\K$};
+
+  \draw[->,thick] (2.0,-0.7) -- node[above]{要素ごとの積和} (3.3,-0.7);
+  \draw[->,thick] (5.7,-0.7) -- (7.0,-0.7);
+
+  % output
+  \node[draw,minimum size=8mm,fill=mainblue!35] at (7.7,0) {19};
+  \node[draw,minimum size=8mm,fill=softgray] at (8.7,0) {25};
+  \node[draw,minimum size=8mm,fill=softgray] at (7.7,-1) {37};
+  \node[draw,minimum size=8mm,fill=softgray] at (8.7,-1) {43};
+  \node at (8.2,-2.0) {出力 $\Y$};
+\end{tikzpicture}
+\end{center}
+
+\[
+0\times0+1\times1+3\times2+4\times3=19.
+\]
+\end{frame}
+
+\begin{frame}{出力サイズ：なぜ少し小さくなるのか}
+\begin{block}{入力サイズとカーネルサイズ}
+入力が $n_\mathrm{h}\times n_\mathrm{w}$，カーネルが $k_\mathrm{h}\times k_\mathrm{w}$ のとき，パディングなし・ストライド1の出力サイズは
+\[
+(n_\mathrm{h}-k_\mathrm{h}+1)\times(n_\mathrm{w}-k_\mathrm{w}+1).
+\]
+\end{block}
+
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.50\textwidth}
+\begin{itemize}
+  \item カーネル全体が画像の中に収まる位置でしか計算できない．
+  \item そのため，画像の端では計算位置が減る．
+  \item 例：$3\times3$ 入力に $2\times2$ カーネルを使うと，出力は $2\times2$ になる．
+\end{itemize}
+\end{column}
+\begin{column}{0.45\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.68]
+  \foreach \x in {0,...,2}{\foreach \y in {0,...,2}{\draw[mainblue!45] (\x,\y) rectangle +(0.75,0.75);}}
+  \draw[accentorange,thick] (0,1) rectangle +(1.5,1.5);
+  \draw[accentorange,thick] (1.1,0.2) rectangle +(1.5,1.5);
+  \node at (1.1,-0.55) {$3\times3$ 入力};
+  \draw[->,thick] (3.2,1.1) -- (4.7,1.1);
+  \foreach \x in {0,...,1}{\foreach \y in {0,...,1}{\draw[mainblue!45] (5+\x,0.5+\y) rectangle +(0.75,0.75);}}
+  \node at (5.75,-0.05) {$2\times2$ 出力};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\begin{seminaralertbox}
+出力サイズを小さくしたくない場合は，次節で学ぶ\alert{パディング}を使う．
+\end{seminaralertbox}
+\end{frame}
+
+
+\begin{frame}[fragile]{\texttt{corr2d} の実装：出力サイズの準備}
+\begin{lstlisting}
+def corr2d(X, K):  #@save
+    """Compute 2D cross-correlation."""
+    h, w = K.shape  # kernel height and width
+
+    # output size: (input size) - (kernel size) + 1
+    Y = d2l.zeros((X.shape[0] - h + 1, X.shape[1] - w + 1))
+\end{lstlisting}
+
+\begin{block}{何をしているか}
+入力 $X$ とカーネル $K$ を受け取り，
+カーネルのサイズ $(h,w)$ を取り出す．
+
+入力が $3\times 3$，カーネルが $2\times 2$ なら，
+出力は
+\[
+(3-2+1)\times(3-2+1)=2\times2
+\]
+になる．
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{corr2d} の実装：各位置で内積を計算}
+\begin{lstlisting}
+    # slide the kernel over all output positions
+    for i in range(Y.shape[0]):
+        for j in range(Y.shape[1]):
+
+            # elementwise product, then sum
+            Y[i, j] = d2l.reduce_sum((X[i: i + h, j: j + w] * K))
+
+    return Y
+\end{lstlisting}
+
+\begin{block}{何をしているか}
+\texttt{X[i: i+h, j: j+w]} は，入力 $X$ から
+カーネルと同じ大きさの部分を切り出している．
+
+その部分と $K$ を成分ごとに掛けて，すべて足すことで
+\[
+Y_{i,j}
+=
+\sum_{a=0}^{h-1}\sum_{b=0}^{w-1}
+X_{i+a,j+b}K_{a,b}
+\]
+を計算している．
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{7.2.2 畳み込み層}
+\begin{block}{畳み込み層の出力}
+畳み込み層は，入力とカーネルの相互相関を計算し，さらにバイアスを加える．
+\[
+\text{出力}=\text{corr2d}(\text{入力},\ \text{カーネル})+\text{バイアス}.
+\]
+\end{block}
+
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.50\textwidth}
+\begin{itemize}
+  \item \alert{カーネル}：局所パッチを見るための重み．
+  \item \alert{バイアス}：出力全体に足されるスカラー値．
+  \item 学習では，カーネルとバイアスをデータから調整する．
+\end{itemize}
+\end{column}
+\begin{column}{0.45\textwidth}
+\centering
+\begin{tikzpicture}[>=Latex,node distance=10mm]
+\node[draw,rounded corners,fill=softgray,minimum width=24mm,minimum height=8mm] (x) {入力 $X$};
+\node[draw,rounded corners,fill=softorange,below=of x,minimum width=24mm,minimum height=8mm] (k) {カーネル $K$};
+\node[draw,rounded corners,fill=softblue,right=22mm of x,minimum width=28mm,minimum height=8mm] (y) {出力 $Y$};
+\draw[->,thick] (x) -- node[above]{相互相関} (y);
+\draw[->,thick] (k) -- (y);
+\node[accentorange] at (3.6,-1.1) {$+b$};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\begin{seminaralertbox}
+$h\times w$ 畳み込みとは，カーネルの高さが $h$，幅が $w$ である畳み込み層のこと．
+\end{seminaralertbox}
+\end{frame}
+
+\begin{frame}[fragile]{畳み込み層の実装}
+\begin{lstlisting}
+class Conv2D(nn.Module):
+    def __init__(self, kernel_size):
+        super().__init__()
+
+        # learnable kernel
+        self.weight = nn.Parameter(
+            torch.rand(kernel_size))
+
+        # learnable bias
+        self.bias = nn.Parameter(torch.zeros(1))
+
+    def forward(self, x):
+        return corr2d(x, self.weight) + self.bias
+\end{lstlisting}
+\begin{block}{ポイント}
+\begin{itemize}
+  \item \texttt{weight} が畳み込みカーネル．ここではランダムに初期化している．
+  \item \texttt{bias} は最初は0．
+  \item \texttt{forward} で \texttt{corr2d} を呼び出し，最後にバイアスを足す．
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{7.2.3. エッジ検出：変化している場所を見つける}
+\begin{block}{エッジとは}
+画像の中で画素値が急に変わる場所を\alert{エッジ}と呼ぶ．
+ここでは，白を $1$，黒を $0$ とし，中央が黒い簡単な画像を考える．
+\end{block}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.55]
+\foreach \y in {0,...,5}{
+  \foreach \x in {0,1,6,7}{\fill[gray!10] (\x,\y) rectangle +(0.8,0.8);\draw[gray!60] (\x,\y) rectangle +(0.8,0.8);}
+  \foreach \x in {2,3,4,5}{\fill[gray!80] (\x,\y) rectangle +(0.8,0.8);\draw[gray!60] (\x,\y) rectangle +(0.8,0.8);}
+}
+\draw[accentorange,very thick] (1.6,0) rectangle (2.4,4.8);
+\draw[accentorange,very thick] (4.8,0) rectangle (5.6,4.8);
+\node at (3.2,-0.6) {白 $\to$ 黒，黒 $\to$ 白 の境界がエッジ};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\subsection{7.2.3. 画像における物体のエッジ検出}
+\begin{frame}[fragile]{7.2.3 画像における物体のエッジ検出}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.52\textwidth}
+\begin{lstlisting}
+X = d2l.ones((6, 8))
+X[:, 2:6] = 0
+
+K = d2l.tensor([[1.0, -1.0]])
+
+Y = corr2d(X, K)
+Y
+\end{lstlisting}
+
+\begin{seminaralertbox}
+\[
+K=\begin{pmatrix}1&-1\end{pmatrix}
+\]
+は横に隣り合う画素の差を取るカーネルである．
+\end{seminaralertbox}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{block}{説明}
+\begin{itemize}
+\item $X$ は $6\times8$ の白黒画像である．
+\item \texttt{X[:, 2:6] = 0} により，中央部分を黒くしている．
+\item 左右で画素値が同じなら，差は $0$ になる．
+\item $1\to0$ の境界では
+\[
+1\cdot1+0\cdot(-1)=1
+\]
+となる．
+\item $0\to1$ の境界では
+\[
+0\cdot1+1\cdot(-1)=-1
+\]
+となる．
+\item したがって，このカーネルは縦方向の境界を検出する．
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\subsection{7.2.4 カーネルの学習}
+\begin{frame}[fragile]{7.2.4 カーネルの学習}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.56\textwidth}
+\begin{lstlisting}
+conv2d = nn.LazyConv2d(1, kernel_size=(1, 2),
+                       bias=False)
+
+X = X.reshape((1, 1, 6, 8))
+Y = Y.reshape((1, 1, 6, 7))
+lr = 3e-2
+
+for i in range(10):
+    Y_hat = conv2d(X)
+    l = (Y_hat - Y) ** 2
+    conv2d.zero_grad()
+    l.sum().backward()
+    conv2d.weight.data[:] -= lr * conv2d.weight.grad
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.41\textwidth}
+\begin{block}{説明}
+\begin{itemize}
+\item 前節では $K=(1,-1)$ を手で決めた．
+\item ここでは，入力 $X$ と正解出力 $Y$ からカーネルを学習する．
+\item \texttt{Y\_hat} は畳み込み層の予測出力．
+\item \texttt{l = (Y\_hat - Y) ** 2} で二乗誤差を計算する．
+\item 誤差が小さくなるようにカーネルを更新する．
+\end{itemize}
+\end{block}
+
+\begin{seminaralertbox}
+手で設計したエッジ検出カーネルも，
+データから学習できる．
+\end{seminaralertbox}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{学習されたカーネル}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.50\textwidth}
+\begin{lstlisting}
+d2l.reshape(conv2d.weight.data, (1, 2))
+\end{lstlisting}
+
+\begin{block}{出力例}
+\begin{lstlisting}
+tensor([[ 0.9414, -1.0291]])
+\end{lstlisting}
+\end{block}
+\end{column}
+
+\begin{column}{0.47\textwidth}
+\begin{block}{説明}
+\begin{itemize}
+\item 学習後の重みは
+\[
+(0.94,\,-1.03)
+\]
+のようになる．
+\item これは，手で設定した
+\[
+K=(1,-1)
+\]
+に非常に近い．
+\item つまり，ニューラルネットワークは
+「エッジを検出するフィルタ」を自動で見つけたことになる．
+\end{itemize}
+\end{block}
+
+\begin{seminaralertbox}
+CNNでは，カーネルを人間が設計するのではなく，
+学習によって獲得する．
+\end{seminaralertbox}
+\end{column}
+\end{columns}
+\end{frame}
+
+\section{7.3. パディングとストライド}
+\begin{frame}[fragile]{7.3 パディングとストライド}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{0.50\textwidth}
+\begin{block}{パディング}
+\begin{itemize}
+\item 畳み込みを行うと，出力サイズは小さくなる．
+\item 境界の周りに $0$ を追加すると，出力サイズを保ちやすい．
+\item これを\textbf{ゼロパディング}という．
+\end{itemize}
+\[
+(n_h-k_h+p_h+1)
+\times
+(n_w-k_w+p_w+1)
+\]
+\end{block}
+
+\begin{lstlisting}
+conv2d = nn.LazyConv2d(1, kernel_size=3,
+                       padding=1)
+comp_conv2d(conv2d, X).shape
+# torch.Size([8, 8])
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.47\textwidth}
+\begin{block}{ストライド}
+\begin{itemize}
+\item カーネルを何マスずつ動かすかを\textbf{ストライド}という．
+\item 通常は $1$ マスずつ動かす．
+\item ストライドを大きくすると，出力サイズを小さくできる．
+\end{itemize}
+\[
+\left\lfloor
+\frac{n_h-k_h+p_h+s_h}{s_h}
+\right\rfloor
+\times
+\left\lfloor
+\frac{n_w-k_w+p_w+s_w}{s_w}
+\right\rfloor
+\]
+\end{block}
+
+\begin{lstlisting}
+conv2d = nn.LazyConv2d(1, kernel_size=3,
+                       padding=1, stride=2)
+comp_conv2d(conv2d, X).shape
+# torch.Size([4, 4])
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{7.2--7.3 まとめ}
+\begin{block}{7.2 畳み込み層}
+\begin{itemize}
+\item 畳み込み層では，入力画像 $X$ にカーネル $K$ を重ねて相互相関演算を行う．
+\item 実際には
+\[
+Y = X \star K + b
+\]
+のように，相互相関の結果にバイアスを加える．
+\item カーネル $K$ は，エッジなどの局所的な特徴を取り出すフィルタとして働く．
+\item CNNでは，このカーネルを手で決めるのではなく，データから学習する．
+\end{itemize}
+\end{block}
+
+\begin{block}{7.3 パディングとストライド}
+\begin{itemize}
+\item \textbf{パディング}は，入力の周囲に $0$ を追加して，出力サイズの縮小を抑える操作である．
+\item \textbf{ストライド}は，カーネルを何マスずつ動かすかを決める量である．
+\item ストライドを大きくすると，出力サイズは小さくなる．
+\end{itemize}
+\end{block}
+
+\begin{seminaralertbox}
+畳み込み層は「局所的な特徴を取り出す層」であり，
+パディングとストライドによって出力サイズを調整できる．
+\end{seminaralertbox}
+\end{frame}
+
+
+
+
+\end{document}
