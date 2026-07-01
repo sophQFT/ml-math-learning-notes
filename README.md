@@ -36,6 +36,17 @@ LLMのハルシネーション検出に関する論文紹介資料です。
 - [Slide folder](slides/paper-reading/spilled-energy-llm/)
 - [Slide PDF](slides/paper-reading/spilled-energy-llm/spilled-energy-llm.pdf)
 
+### Thermodynamics and Statistical Mechanics Notes
+
+熱力学・統計力学を初めて学ぶ読者でも、磁性体の相転移を理解できるように作成した行間補足ノートです。
+エントロピーの公理的導入、ルジャンドル変換、ヘルムホルツ自由エネルギー、カノニカル分布、ディラック方程式、磁場中のスピン、常磁性、強磁性Isingモデル、平均場近似、自発的対称性の破れまでを整理しています。
+
+* [Notes folder](notes/statistical-mechanics/thermo-stat-mech/)
+* [Full PDF](notes/statistical-mechanics/thermo-stat-mech/thermo-stat-mech-notes.pdf)
+
+**Keywords:** Thermodynamics, Statistical Mechanics, Entropy, Legendre Transform, Canonical Distribution, Ising Model, Mean-Field Approximation, Phase Transition
+
+
 
 ### Mathematical Statistics Notes
 
