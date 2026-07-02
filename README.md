@@ -13,21 +13,6 @@
 * 数理統計学・統計力学の行間補足ノート
 * 論文紹介資料
 * Python / PyTorch による基礎的な実装・数値実験
-# ML / Math Learning Notes
-
-機械学習・深層学習を、数理統計・確率論・統計力学の観点から理解するために作成している学習ノート・ゼミ発表資料・論文紹介資料・実装メモをまとめたリポジトリです。
-
-📄 **Portfolio Site:** https://sophqft.github.io/ml-math-learning-notes/
-
-単にモデルを利用するだけでなく、数式・実装・発表資料を通じて、その背後にある考え方を理解することを目的としています。特に、Transformer / LLM、Energy-Based Model、Softmax、Boltzmann 分布、ハルシネーション検出など、深層学習と統計力学・数理統計との接続に関心があります。
-
-主に以下の内容を整理しています。
-
-* 深層学習・機械学習の学習ノート
-* Dive into Deep Learning 輪読ゼミ用の発表資料
-* 数理統計学・統計力学の行間補足ノート
-* 論文紹介資料
-* Python / PyTorch による基礎的な実装・数値実験
 
 
 ## Selected Works
