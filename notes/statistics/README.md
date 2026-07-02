@@ -4,13 +4,6 @@
 
 ## Contents
 
-### Kubokawa Mathematical Statistics Notes
-
-- `kubokawa-math-statistics/`
+- [Kubokawa Mathematical Statistics Notes](./kubokawa-math-statistics/)
   - 久保川『現代数理統計学の基礎』を学習する中で作成した行間補足ノート
-  - 統計量と標本分布、推定量と不偏性、標本平均と不偏分散、ヘルマート行列を用いた独立性の証明、t分布、確率収束、大数の弱法則、中心極限定理、スラツキーの定理などを整理
-
-## Motivation
-
-機械学習や不確実性モデリングを、確率論・数理統計の基礎から理解することを目的としています。
-特に、モデルの予測や推定を数理的に理解するために、標本分布・漸近理論・確率収束の基礎を重点的に学習しています。
+  - 標本分布、推定量、不偏性、標本平均と不偏分散の独立性、t分布、確率収束、中心極限定理などを整理
