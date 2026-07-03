@@ -11,5 +11,4 @@ Gap-filling notes from axiomatic entropy via adiabatic accessibility through Leg
 
 **[📄 ノートPDFを見る / View notes (PDF)](https://sophqft.github.io/ml-math-learning-notes/notes/statistical-mechanics/thermo-stat-mech/thermo-stat-mech-notes.pdf)**
 
-- 執筆期間: 2024.12 – 2026.06
 - 形式: LaTeX / 40 pages
