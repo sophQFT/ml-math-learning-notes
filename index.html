@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja" data-lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML / Math Learning Notes — soph</title>
+<meta name="description" content="機械学習・深層学習を数理統計・確率論・統計力学の観点から理解するための学習ノート・ゼミ資料・論文紹介・実装ログ。">
+<meta property="og:title" content="ML / Math Learning Notes — soph">
+<meta property="og:description" content="機械学習・深層学習を数理統計・確率論・統計力学の観点から理解するための学習ノート・発表資料・実装ログ。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sophqft.github.io/ml-math-learning-notes/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#18171C;          /* わずかに紫がかったチャコール */
+  --panel:#1E1D24;
+  --panel-2:#232230;
+  --text:#F0EFF4;
+  --sub:#C9C7D3;
+  --faint:#918FA0;
+  --accent:#A99DF2;      /* ラベンダー */
+  --accent-h:#C9C1FA;
+  --accent-dim:rgba(169,157,242,.14);
+  --rule:#39374A;
+  --rule-soft:#2A2936;
+  --wip:#DDB56A;
+  --sans:"Noto Sans JP",-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans",sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:28px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.95;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:rgba(169,157,242,.35)}
+a{color:var(--accent);text-decoration:none;transition:color .15s}
+a:hover{color:var(--accent-h);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+html[data-lang="ja"] .en{display:none!important}
+html[data-lang="en"] .ja{display:none!important}
+
+.wrap{max-width:1060px;margin:0 auto;padding:0 24px}
+
+/* ---------- header ---------- */
+header{background:linear-gradient(180deg,var(--panel) 0%,var(--bg) 100%);border-bottom:1px solid var(--rule-soft);padding:52px 0 40px}
+.head-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.crumb{font-family:var(--mono);font-size:.8rem;color:var(--faint);margin-bottom:12px}
+.crumb a{color:var(--faint)}
+.crumb a:hover{color:var(--accent)}
+h1{font-size:1.75rem;font-weight:700;line-height:1.45;letter-spacing:.01em;margin-bottom:14px}
+header p.desc{color:var(--sub);font-size:1rem;max-width:44em}
+.lang-btn{font-family:var(--mono);font-size:.78rem;border:1px solid var(--rule);background:transparent;color:var(--sub);border-radius:6px;padding:6px 14px;cursor:pointer;flex-shrink:0;transition:border-color .15s,color .15s}
+.lang-btn:hover{border-color:var(--accent);color:var(--text)}
+.lang-btn .active{color:var(--accent);font-weight:700}
+
+/* ---------- 2-column layout ---------- */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 264px;gap:56px;padding:44px 0 64px}
+main{min-width:0}
+
+/* category section */
+section{margin-bottom:56px}
+.sec-head{display:flex;align-items:baseline;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--rule);margin-bottom:6px}
+.sec-no{font-family:var(--mono);font-size:.78rem;color:var(--accent);letter-spacing:.05em}
+h2{font-size:1.3rem;font-weight:700;letter-spacing:.01em}
+h2 .count{font-family:var(--mono);font-size:.78rem;color:var(--faint);font-weight:400;margin-left:10px}
+.sec-note{color:var(--faint);font-size:.9rem;margin:6px 0 2px}
+
+/* entries */
+.entry{padding:26px 18px;margin:0 -18px;border-bottom:1px solid var(--rule-soft);border-radius:8px;transition:background .15s}
+.entry:hover{background:var(--panel)}
+.entry:last-child{border-bottom:none}
+.emeta{font-family:var(--mono);font-size:.76rem;color:var(--faint);letter-spacing:.02em;margin-bottom:4px}
+.emeta .date{color:var(--accent)}
+h3{font-size:1.12rem;font-weight:700;line-height:1.7;margin-bottom:6px}
+h3 a{color:var(--text)}
+h3 a:hover{color:var(--accent-h)}
+.badge{display:inline-block;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;border-radius:5px;padding:1px 9px;vertical-align:2px;margin-left:10px;color:var(--wip);border:1px solid rgba(221,181,106,.4);background:rgba(221,181,106,.07)}
+.entry p{font-size:.95rem;color:var(--sub);margin-bottom:8px}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.tags span{font-family:var(--mono);font-size:.72rem;color:var(--accent);background:var(--accent-dim);border-radius:5px;padding:2px 10px}
+.elinks{font-family:var(--mono);font-size:.8rem;display:flex;gap:20px;flex-wrap:wrap}
+.elinks a::before{content:"→ ";color:var(--faint)}
+
+/* ---------- 学習ログ timeline ---------- */
+.log{border-left:2px solid var(--rule);margin:18px 0 0 7px;padding-left:30px}
+.log-item{position:relative;padding-bottom:28px}
+.log-item:last-child{padding-bottom:4px}
+.log-item::before{
+  content:"";position:absolute;left:-37px;top:10px;width:10px;height:10px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--accent);
+  box-shadow:0 0 0 4px var(--bg);
+}
+.log-date{font-family:var(--mono);font-size:.76rem;color:var(--accent);letter-spacing:.04em}
+.log-item h4{font-size:1.02rem;font-weight:700;line-height:1.7;margin:2px 0 3px}
+.log-item p{font-size:.92rem;color:var(--sub)}
+
+/* ---------- sidebar ---------- */
+aside{font-size:.9rem}
+.side-box{padding:0 0 26px;margin-bottom:26px;border-bottom:1px solid var(--rule-soft)}
+.side-box:last-child{border-bottom:none}
+.side-box h4{font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;margin-bottom:12px}
+.side-box h4::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);margin-right:9px;vertical-align:0}
+.side-box p{color:var(--sub);font-size:.88rem;margin-bottom:8px}
+ul.side-list{list-style:none}
+ul.side-list li{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0}
+ul.side-list a{color:var(--sub)}
+ul.side-list a:hover{color:var(--accent-h)}
+ul.side-list .n{font-family:var(--mono);font-size:.74rem;color:var(--faint)}
+ul.updates{list-style:none}
+ul.updates li{padding:8px 0;border-bottom:1px dashed var(--rule-soft);font-size:.86rem;color:var(--sub);line-height:1.75}
+ul.updates li:last-child{border-bottom:none}
+ul.updates .d{font-family:var(--mono);font-size:.72rem;color:var(--accent);display:block}
+.sticky{position:sticky;top:24px}
+
+footer{border-top:1px solid var(--rule-soft);background:var(--panel);padding:30px 0 44px;font-size:.84rem;color:var(--faint)}
+.foot-links{margin-top:14px;font-family:var(--mono);font-size:.8rem;display:flex;gap:20px;flex-wrap:wrap}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;gap:12px}
+  aside{margin-top:28px}
+  .sticky{position:static}
+  .entry{padding:24px 0;margin:0;border-radius:0}
+  .entry:hover{background:transparent}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="head-top">
+      <div>
+        <div class="crumb"><a href="https://sophqft.github.io/">sophqft.github.io</a> / ml-math-learning-notes</div>
+        <h1>ML / Math Learning Notes</h1>
+        <p class="desc ja">機械学習・深層学習を、数理統計・確率論・統計力学の観点から理解するために作成している学習ノート、ゼミ発表資料、論文紹介資料、実装ログです。</p>
+        <p class="desc en">Study notes, seminar slides, paper readings, and implementation logs for understanding machine learning through mathematical statistics, probability theory, and statistical mechanics.</p>
+      </div>
+      <button class="lang-btn" id="langBtn" aria-label="Switch language"><span id="jaL" class="active">JA</span> / <span id="enL">EN</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap layout">
+<main>
+
+<!-- ================ 論文紹介 ================ -->
+<section id="paper-reading">
+  <div class="sec-head"><span class="sec-no">01</span><h2><span class="ja">論文紹介</span><span class="en">Paper Reading</span><span class="count">1</span></h2></div>
+
+  <div class="entry">
+    <div class="emeta"><span class="date">2026</span> · Beamer slides · 27 pages · ICLR 2026</div>
+    <h3><a href="https://sophqft.github.io/ml-math-learning-notes/slides/paper-reading/spilled-energy-llm/spilled-energy-llm.pdf"><span class="ja">Spilled Energy in Large Language Models — ハルシネーション検出を「エネルギーのズレ」として読む</span><span class="en">Spilled Energy in Large Language Models — hallucination detection as an energy mismatch</span></a></h3>
+    <p class="ja">LLM の最終 softmax を Energy-Based Model として解釈し、連続する生成ステップ間のエネルギーのズレから誤答を検出する論文（Minut, Dewidar &amp; Masi）の紹介資料。数式展開・図の読み方・実験結果まで整理。</p>
+    <p class="en">Slides on a paper (Minut, Dewidar &amp; Masi) that reads the LLM's final softmax as an energy-based model and detects hallucinations from the energy mismatch between generation steps.</p>
+    <div class="tags"><span>LLM</span><span>Hallucination Detection</span><span>Energy-Based Model</span><span>Softmax</span></div>
+    <div class="elinks">
+      <a href="https://sophqft.github.io/ml-math-learning-notes/slides/paper-reading/spilled-energy-llm/spilled-energy-llm.pdf">PDF</a>
+      <a href="https://github.com/sophQFT/ml-math-learning-notes/tree/main/slides/paper-reading/spilled-energy-llm"><span class="ja">ソース</span><span class="en">Source</span></a>
+      <a href="https://arxiv.org/abs/2602.18671">arXiv</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================ ノート ================ -->
+<section id="notes">
+  <div class="sec-head"><span class="sec-no">02</span><h2><span class="ja">ノート</span><span class="en">Notes</span><span class="count">2</span></h2></div>
+
+  <div class="entry">
+    <div class="emeta"><span class="date">2024.12 – 2026.06</span> · Lecture notes · 40 pages</div>
+    <h3><a href="https://sophqft.github.io/ml-math-learning-notes/notes/statistical-mechanics/thermo-stat-mech/thermo-stat-mech-notes.pdf"><span class="ja">熱力学・統計力学ノート — エントロピー公理から Ising 平均場まで</span><span class="en">Thermodynamics &amp; Statistical Mechanics — from entropy axioms to mean-field Ising</span></a></h3>
+    <p class="ja">初学者でも磁性体の相転移まで辿り着けるように書いた行間補足ノート。エントロピーの公理的導入、ルジャンドル変換、カノニカル分布、強磁性 Ising モデル、平均場近似、自発的対称性の破れまで。分配関数・自由エネルギーを Energy-Based Model 理解の基礎として位置づけています。</p>
+    <p class="en">Gap-filling notes from axiomatic entropy through Legendre transforms, the canonical distribution, the ferromagnetic Ising model, mean-field approximation, and spontaneous symmetry breaking — a foundation for energy-based models.</p>
+    <div class="tags"><span>Statistical Mechanics</span><span>Entropy</span><span>Ising Model</span><span>Mean-Field</span><span>Phase Transition</span></div>
+    <div class="elinks">
+      <a href="https://sophqft.github.io/ml-math-learning-notes/notes/statistical-mechanics/thermo-stat-mech/thermo-stat-mech-notes.pdf">PDF</a>
+      <a href="https://github.com/sophQFT/ml-math-learning-notes/tree/main/notes/statistical-mechanics/thermo-stat-mech"><span class="ja">ソース</span><span class="en">Source</span></a>
+    </div>
+  </div>
+
+  <div class="entry">
+    <div class="emeta">Lecture notes · 14 pages + chapter PDFs</div>
+    <h3><a href="https://sophqft.github.io/ml-math-learning-notes/notes/statistics/kubokawa-math-statistics/pdf/kubokawa-math-statistics-notes.pdf"><span class="ja">数理統計学ノート — 久保川『現代数理統計学の基礎』行間補足</span><span class="en">Mathematical Statistics — supplementary notes on Kubokawa's textbook</span></a></h3>
+    <p class="ja">標本分布、不偏推定量、ヘルマート行列による標本平均と不偏分散の独立性の証明、確率収束、大数の弱法則、中心極限定理、スラツキーの定理などを、省略されがちな計算を補いながら整理。</p>
+    <p class="en">Sampling distributions, unbiased estimators, a Helmert-matrix independence proof, the weak law of large numbers, the CLT, and Slutsky's theorem — with omitted calculations filled in.</p>
+    <div class="tags"><span>Mathematical Statistics</span><span>CLT</span><span>Slutsky's Theorem</span></div>
+    <div class="elinks">
+      <a href="https://sophqft.github.io/ml-math-learning-notes/notes/statistics/kubokawa-math-statistics/pdf/kubokawa-math-statistics-notes.pdf">PDF</a>
+      <a href="https://github.com/sophQFT/ml-math-learning-notes/tree/main/notes/statistics/kubokawa-math-statistics"><span class="ja">ソース</span><span class="en">Source</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ================ ゼミ発表資料 ================ -->
+<section id="slides">
+  <div class="sec-head"><span class="sec-no">03</span><h2><span class="ja">ゼミ発表資料</span><span class="en">Seminar Slides</span><span class="count">2</span></h2></div>
+
+  <div class="entry">
+    <div class="emeta"><span class="date">2026.05</span> · Beamer slides · 48 pages · D2L 輪読ゼミ</div>
+    <h3><a href="https://sophqft.github.io/ml-math-learning-notes/slides/d2l-softmax-regression/softmax-regression-d2l.pdf"><span class="ja">ソフトマックス回帰とボルツマン分布</span><span class="en">Softmax Regression &amp; the Boltzmann Distribution</span></a></h3>
+    <p class="ja">線形モデルからソフトマックス関数を導き、ボルツマン分布との対応、交差エントロピー損失の導出、PyTorch による Fashion-MNIST の読み込みまでを整理。</p>
+    <p class="en">From linear models to softmax, its correspondence with the Boltzmann distribution, cross-entropy loss, and loading Fashion-MNIST with PyTorch.</p>
+    <div class="tags"><span>Softmax Regression</span><span>Cross Entropy</span><span>Boltzmann Distribution</span><span>PyTorch</span></div>
+    <div class="elinks">
+      <a href="https://sophqft.github.io/ml-math-learning-notes/slides/d2l-softmax-regression/softmax-regression-d2l.pdf">PDF</a>
+      <a href="https://github.com/sophQFT/ml-math-learning-notes/tree/main/slides/d2l-softmax-regression"><span class="ja">ソース</span><span class="en">Source</span></a>
+    </div>
+  </div>
+
+  <div class="entry">
+    <div class="emeta">Beamer slides · 26 pages · D2L 輪読ゼミ</div>
+    <h3><a href="https://sophqft.github.io/ml-math-learning-notes/slides/d2l-cnn/d2l-cnn.pdf"><span class="ja">CNN：全結合層から畳み込みへ</span><span class="en">CNNs: From Fully Connected Layers to Convolution</span></a></h3>
+    <p class="ja">画像認識で全結合層ではなく畳み込み層を使う理由を、平行移動等価性・局所性・重み共有という帰納バイアスの観点から整理した導入資料。</p>
+    <p class="en">Why convolutions instead of fully connected layers: translation equivariance, locality, and weight sharing as inductive biases.</p>
+    <div class="tags"><span>CNN</span><span>Inductive Bias</span><span>Translation Equivariance</span></div>
+    <div class="elinks">
+      <a href="https://sophqft.github.io/ml-math-learning-notes/slides/d2l-cnn/d2l-cnn.pdf">PDF</a>
+      <a href="https://github.com/sophQFT/ml-math-learning-notes/tree/main/slides/d2l-cnn"><span class="ja">ソース</span><span class="en">Source</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ================ 実装・再現実験 ================ -->
+<section id="implementations">
+  <div class="sec-head"><span class="sec-no">04</span><h2><span class="ja">実装・再現実験</span><span class="en">Implementations</span><span class="count">2 WIP</span></h2></div>
+
+  <div class="entry">
+    <div class="emeta">Jupyter Notebook · notebooks/softmax-temperature</div>
+    <h3><span class="ja">Softmax の温度パラメータと分布の形状</span><span class="en">Softmax temperature and the shape of the distribution</span><span class="badge">WIP</span></h3>
+    <p class="ja">温度 T を変えたときに softmax 出力（ボルツマン分布）がどう尖り・平坦化するかを可視化し、統計力学ノートのカノニカル分布の議論と対応づける予定。</p>
+    <p class="en">Visualizing how softmax output sharpens and flattens with temperature T, connected to the canonical-distribution discussion in the notes.</p>
+    <div class="tags"><span>Softmax</span><span>Temperature</span><span>Python</span></div>
+  </div>
+
+  <div class="entry">
+    <div class="emeta">Jupyter Notebook · notebooks/clt-simulation</div>
+    <h3><span class="ja">中心極限定理のシミュレーション</span><span class="en">Simulating the Central Limit Theorem</span><span class="badge">WIP</span></h3>
+    <p class="ja">さまざまな母集団分布からの標本平均が正規分布に近づく様子をシミュレーションで確認し、数理統計ノートの CLT の証明と対応づける予定。</p>
+    <p class="en">Simulating how sample means approach normality across population distributions, paired with the CLT proof in the notes.</p>
+    <div class="tags"><span>CLT</span><span>Simulation</span><span>Python</span></div>
+  </div>
+
+  <!-- 完成した実装の追加テンプレート:
+  <div class="entry">
+    <div class="emeta"><span class="date">2026.MM</span> · Jupyter Notebook · notebooks/xxx</div>
+    <h3><a href="https://github.com/sophQFT/ml-math-learning-notes/tree/main/notebooks/xxx"><span class="ja">タイトル</span><span class="en">Title</span></a></h3>
+    <p class="ja">何を実装し、何を確認したか。</p>
+    <p class="en">What was implemented and verified.</p>
+    <div class="tags"><span>PyTorch</span></div>
+    <div class="elinks"><a href="https://github.com/sophQFT/ml-math-learning-notes/tree/main/notebooks/xxx">Notebook</a></div>
+  </div>
+  -->
+</section>
+
+<!-- ================ 記事 ================ -->
+<section id="articles">
+  <div class="sec-head"><span class="sec-no">05</span><h2><span class="ja">記事</span><span class="en">Articles</span><span class="count">1</span></h2></div>
+
+  <div class="entry">
+    <div class="emeta">Zenn + PDF notes</div>
+    <h3><a href="https://zenn.dev/soph/articles/53c0c74bf90e06"><span class="ja">ヘルマート行列で示す標本平均と不偏分散の独立性と t 分布</span><span class="en">Independence of the sample mean and variance via the Helmert matrix, and the t distribution</span></a></h3>
+    <p class="ja">正規母集団における標本平均と不偏分散の独立性をヘルマート行列による直交変換で証明し、t 分布の導入まで整理。上の数理統計ノートと対応。</p>
+    <p class="en">An orthogonal Helmert-transformation proof of the independence of the sample mean and unbiased variance, leading to the t distribution.</p>
+    <div class="tags"><span>Helmert Matrix</span><span>t Distribution</span><span>Independence</span></div>
+    <div class="elinks">
+      <a href="https://zenn.dev/soph/articles/53c0c74bf90e06"><span class="ja">記事</span><span class="en">Article</span></a>
+      <a href="https://sophqft.github.io/ml-math-learning-notes/notes/statistics/kubokawa-math-statistics/pdf/02-normal-sample-distribution-and-independence.pdf">PDF</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================ 学習ログ ================ -->
+<section id="log">
+  <div class="sec-head"><span class="sec-no">06</span><h2><span class="ja">学習ログ</span><span class="en">Log</span></h2></div>
+  <p class="sec-note ja">公開した資料・学習の記録です。新しいものが上にきます。</p>
+  <p class="sec-note en">A record of published materials and study progress, newest first.</p>
+
+  <div class="log">
+    <!-- 新しいログはこの直下に .log-item を追加 -->
+    <div class="log-item">
+      <div class="log-date">2026</div>
+      <h4 class="ja">論文紹介: Spilled Energy in Large Language Models (ICLR 2026)</h4>
+      <h4 class="en">Paper reading: Spilled Energy in Large Language Models (ICLR 2026)</h4>
+      <p class="ja">LLM のハルシネーション検出を Energy-Based Model の観点から整理した発表資料を公開。</p>
+      <p class="en">Published slides on LLM hallucination detection from an energy-based-model perspective.</p>
+    </div>
+    <div class="log-item">
+      <div class="log-date">2026.06</div>
+      <h4 class="ja">熱力学・統計力学ノート（40ページ）を公開</h4>
+      <h4 class="en">Published the 40-page thermodynamics &amp; statistical mechanics notes</h4>
+      <p class="ja">2024年12月から書き続けてきた行間補足ノートを、Ising 平均場・自発的対称性の破れまで含めて公開。</p>
+      <p class="en">Notes in progress since December 2024, now covering up to mean-field Ising and spontaneous symmetry breaking.</p>
+    </div>
+    <div class="log-item">
+      <div class="log-date">2026.05</div>
+      <h4 class="ja">D2L 輪読ゼミ: ソフトマックス回帰の発表</h4>
+      <h4 class="en">D2L reading group: presented softmax regression</h4>
+      <p class="ja">ソフトマックス回帰とボルツマン分布の対応を中心に 48 枚のスライドで発表。</p>
+      <p class="en">A 48-slide presentation centered on the softmax–Boltzmann correspondence.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================ SIDEBAR ================ -->
+<aside>
+  <div class="sticky">
+
+    <div class="side-box">
+      <h4>Profile</h4>
+      <p class="ja"><b style="color:var(--text)">soph</b><br>機械学習を数理的に説明できる状態で理解することを目標に、数理統計・確率論・統計力学を学んでいます。</p>
+      <p class="en"><b style="color:var(--text)">soph</b><br>Studying ML through mathematical statistics, probability, and statistical mechanics — aiming to understand it well enough to explain.</p>
+      <p style="margin-bottom:0"><a href="https://github.com/sophQFT">GitHub</a> · <a href="https://zenn.dev/soph">Zenn</a> · <a href="https://sophqft.github.io/"><span class="ja">トップ</span><span class="en">Home</span></a></p>
+    </div>
+
+    <div class="side-box">
+      <h4><span class="ja">カテゴリ</span><span class="en">Categories</span></h4>
+      <ul class="side-list">
+        <li><a href="#paper-reading"><span class="ja">論文紹介</span><span class="en">Paper Reading</span></a><span class="n">1</span></li>
+        <li><a href="#notes"><span class="ja">ノート</span><span class="en">Notes</span></a><span class="n">2</span></li>
+        <li><a href="#slides"><span class="ja">ゼミ発表資料</span><span class="en">Seminar Slides</span></a><span class="n">2</span></li>
+        <li><a href="#implementations"><span class="ja">実装・再現実験</span><span class="en">Implementations</span></a><span class="n">2 WIP</span></li>
+        <li><a href="#articles"><span class="ja">記事</span><span class="en">Articles</span></a><span class="n">1</span></li>
+        <li><a href="#log"><span class="ja">学習ログ</span><span class="en">Log</span></a><span class="n">3</span></li>
+      </ul>
+    </div>
+
+    <div class="side-box">
+      <h4><span class="ja">最近の更新</span><span class="en">Recent Updates</span></h4>
+      <ul class="updates">
+        <!-- 新しい更新はこの直下に追加（学習ログと合わせて更新） -->
+        <li><span class="d">2026</span><span class="ja">論文紹介: Spilled Energy in LLMs (ICLR 2026) を公開</span><span class="en">Published paper reading: Spilled Energy in LLMs (ICLR 2026)</span></li>
+        <li><span class="d">2026.06</span><span class="ja">熱力学・統計力学ノート（40ページ）を公開</span><span class="en">Published 40-page thermo &amp; stat-mech notes</span></li>
+        <li><span class="d">2026.05</span><span class="ja">D2L ゼミ: ソフトマックス回帰を発表</span><span class="en">D2L reading group: presented softmax regression</span></li>
+      </ul>
+    </div>
+
+  </div>
+</aside>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="ja">このサイトは個人の学習・発表資料を整理したものです。内容には誤りを含む可能性があります。教科書・講義資料・論文等を参考にした場合は、各資料内で出典を明記しています。</div>
+    <div class="en">This site organizes personal study materials, which may contain errors. Sources are cited in each document.</div>
+    <div class="foot-links">
+      <a href="https://sophqft.github.io/"><span class="ja">← トップページ</span><span class="en">← Home</span></a>
+      <a href="https://github.com/sophQFT">GitHub</a>
+      <a href="https://zenn.dev/soph">Zenn</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var b=document.getElementById('langBtn'),ja=document.getElementById('jaL'),en=document.getElementById('enL');
+  b.addEventListener('click',function(){
+    var r=document.documentElement,n=r.dataset.lang==='ja'?'en':'ja';
+    r.dataset.lang=n;r.setAttribute('lang',n);
+    ja.classList.toggle('active',n==='ja');en.classList.toggle('active',n==='en');
+  });
+})();
+</script>
+</body>
+</html>
