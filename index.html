@@ -48,7 +48,7 @@ header{background:linear-gradient(180deg,var(--panel) 0%,var(--bg) 100%);border-
 .crumb{font-family:var(--mono);font-size:.8rem;color:var(--faint);margin-bottom:12px}
 .crumb a{color:var(--faint)}
 .crumb a:hover{color:var(--accent)}
-h1{font-size:1.75rem;font-weight:700;line-height:1.45;letter-spacing:.01em;margin-bottom:14px}
+h1{font-size:clamp(1.35rem,4.5vw,1.75rem);font-weight:700;line-height:1.45;letter-spacing:.01em;margin-bottom:14px}
 header p.desc{color:var(--sub);font-size:1rem;max-width:44em}
 .lang-btn{font-family:var(--mono);font-size:.78rem;border:1px solid var(--rule);background:transparent;color:var(--sub);border-radius:6px;padding:6px 14px;cursor:pointer;flex-shrink:0;transition:border-color .15s,color .15s}
 .lang-btn:hover{border-color:var(--accent);color:var(--text)}
@@ -131,6 +131,19 @@ footer{border-top:1px solid var(--rule-soft);background:var(--panel);padding:30p
   .sticky{position:static}
   .entry{padding:24px 0;margin:0;border-radius:0}
   .entry:hover{background:transparent}
+}
+@media(max-width:640px){
+  body{font-size:16px}
+  .wrap{padding:0 18px}
+  header{padding:36px 0 28px}
+  .head-top{flex-direction:column-reverse;align-items:flex-start;gap:12px}
+  .lang-btn{align-self:flex-end}
+  section{margin-bottom:44px}
+  .layout{padding:32px 0 48px}
+  h3{font-size:1.06rem}
+  .elinks{gap:14px}
+  .log{padding-left:24px}
+  .log-item::before{left:-31px}
 }
 </style>
 </head>
