@@ -1,95 +1,15 @@
-﻿# 行間を埋める熱力学・統計力学ノート
+# 熱力学・統計力学ノート — エントロピー公理から Ising 平均場まで
 
-熱力学・統計力学を初めて学ぶ読者でも、磁性体の相転移を理解できるように、エントロピー、熱力学関数、カノニカル分布、磁性体、Isingモデル、平均場近似までを整理した学習ノートです。
+熱力学・統計力学を初めて学ぶ読者でも磁性体の相転移を理解できるように書いた行間補足ノート（40ページ）です。教科書が省略しがちな導出を、できるだけ省かずに埋めることを主眼としています。
 
-教科書では省略されがちな導出や概念のつながりを、できるだけ行間を埋めながら説明することを目的としています。
+- **第1章 熱力学関数** — 断熱的到達可能性によるエントロピーの公理的導入（加法性・示量性・凹性）、基本関係式、ルジャンドル変換の詳説、ヘルムホルツ／ギッブスの自由エネルギー、磁化と磁場を共役変数とする磁性体の熱力学
+- **第2章 カノニカル分布** — 分配関数の計算（鞍点法に対応する近似を含む）
+- **第3章 相互作用がない電子系の磁性** — ディラック方程式の非相対論的近似からのパウリ項（ゼーマン相互作用）の導出、スピンと磁気モーメントの符号の注意、常磁性の統計力学的扱い
+- **第4章 強磁性 Ising モデル** — 平均場近似、自己無撞着方程式、相転移と自発的対称性の破れ
 
-## PDF
+Gap-filling notes from axiomatic entropy via adiabatic accessibility through Legendre transforms, the canonical distribution, the Zeeman interaction derived from the Dirac equation, paramagnetism, and the mean-field ferromagnetic Ising model with spontaneous symmetry breaking.
 
-* [View PDF](https://sophqft.github.io/ml-math-learning-notes/notes/statistical-mechanics/thermo-stat-mech/thermo-stat-mech-notes.pdf)
+**[📄 ノートPDFを見る / View notes (PDF)](https://sophqft.github.io/ml-math-learning-notes/notes/statistical-mechanics/thermo-stat-mech/thermo-stat-mech-notes.pdf)**
 
-## Overview
-
-本ノートでは、まずエントロピーを断熱的到達可能性の観点から導入し、熱力学の基本関係式を整理します。そのうえで、ルジャンドル変換を用いてヘルムホルツ自由エネルギーやギッブス自由エネルギーなどの熱力学関数を構成し、それぞれの自然な変数や物理的意味を確認します。
-
-次に、統計力学の基礎としてカノニカル分布を導入し、分配関数、エネルギーの期待値、エネルギー揺らぎの関係を整理します。
-
-後半では、磁性体を題材として、磁場中のスピン、常磁性、強磁性Isingモデルを扱います。特に、相互作用のあるスピン系では分配関数の計算が難しくなるため、平均場近似を導入し、自己無撞着方程式から相転移や自発的対称性の破れがどのように現れるかを説明しています。
-
-## Contents
-
-1. 熱力学関数
-
-   * 凸結合と断熱遷移
-   * エントロピーの導入
-   * エントロピーの加法性と示量性
-   * 熱力学の基本関係式
-   * ルジャンドル変換
-   * ヘルムホルツ自由エネルギー
-   * ギッブス自由エネルギー
-   * 磁性体の熱力学
-
-2. カノニカル分布
-
-   * カノニカル分布の導出
-   * 分配関数
-   * エネルギーの期待値
-   * エネルギーの揺らぎ
-   * エネルギー密度の揺らぎ
-
-3. 相互作用がない電子系の磁性
-
-   * スピンと磁場の相互作用
-   * パウリ項とゼーマン相互作用
-   * スピンと磁気モーメント
-   * 一様磁場中のスピン
-   * 2準位系のカノニカル分布
-   * 常磁性
-   * 統計力学的な磁化
-   * 磁化と自由エネルギー
-
-4. 相互作用のある系の統計力学
-
-   * 強磁性Isingモデル
-   * 相互作用がある系の分配関数
-   * 平均場近似
-   * 自己無撞着方程式
-   * 高温相と低温相
-   * 臨界現象
-   * 自発磁化
-   * 自発的対称性の破れ
-
-## Motivation
-
-相転移や自発的対称性の破れを理解するためには、Isingモデルや平均場近似だけでなく、その前提となる熱力学関数、カノニカル分布、磁性体の熱力学を順に理解する必要があると考えました。
-
-本ノートでは、エントロピーや自由エネルギーを単なる公式として扱うのではなく、断熱遷移、ルジャンドル変換、分配関数との関係を追いながら整理しています。これにより、統計力学における「ミクロな確率分布」と「マクロな熱力学量」がどのように接続されるかを理解することを目指しています。
-
-また、平均場近似によって強磁性Isingモデルの相転移を記述する流れは、深層学習やエネルギーベースモデルに現れるエネルギー関数、分配関数、近似推論を理解するうえでも重要な基礎になると考えています。
-
-
-## Keywords
-
-* Thermodynamics
-* Statistical Mechanics
-* Entropy
-* Adiabatic Accessibility
-* Legendre Transform
-* Helmholtz Free Energy
-* Gibbs Free Energy
-* Canonical Distribution
-* Partition Function
-* Magnetism
-* Paramagnetism
-* Ising Model
-* Mean-Field Approximation
-* Self-Consistent Equation
-* Phase Transition
-* Spontaneous Symmetry Breaking
-
-
-## Notes
-
-このノートは個人の学習・発表資料として作成したものです。内容には誤りを含む可能性があります。
-
-公開にあたっては、教科書本文の転載ではなく、自分の理解に基づく行間補足・導出整理として作成しています。
+- 執筆期間: 2024.12 – 2026.06
+- 形式: LaTeX / 40 pages
