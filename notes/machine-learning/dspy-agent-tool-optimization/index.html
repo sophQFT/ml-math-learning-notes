@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSPy Tool-Use Optimization Notes</title>
+<meta name="description" content="DSPyのSignature、ReAct、Tool、Metric、OptimizerとAIエージェントのツール利用最適化を整理した実習用リファレンス。">
+<style>
+:root{--bg:#18171C;--panel:#1E1D24;--panel2:#232230;--text:#F0EFF4;--sub:#D9D7E2;--faint:#9793A5;--accent:#A99DF2;--accent2:#C9C1FA;--rule:#39374A;--code:#111015;--ok:#94d3a2;--warn:#e6bf73;--sans:"Noto Sans JP","Segoe UI","Hiragino Sans",sans-serif;--mono:"JetBrains Mono","Cascadia Code",Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.85}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline;color:var(--accent2)}
+header{border-bottom:1px solid var(--rule);background:linear-gradient(180deg,var(--panel),var(--bg));padding:36px 24px}header .inner{max-width:1200px;margin:auto}.crumb{font-family:var(--mono);font-size:.8rem;color:var(--faint)}h1{font-size:clamp(1.6rem,4vw,2.35rem);line-height:1.35;margin:.5rem 0}.tagline{color:var(--sub);max-width:900px}
+.layout{max-width:1200px;margin:auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:42px;padding:34px 24px 80px}nav{position:sticky;top:18px;align-self:start;border:1px solid var(--rule);background:var(--panel);border-radius:10px;padding:18px}nav h3{font-family:var(--mono);font-size:.78rem;color:var(--faint);letter-spacing:.08em;margin:0 0 10px}nav a{display:block;padding:6px 0;color:var(--sub);font-size:.9rem}main{min-width:0}section{margin-bottom:54px}h2{font-size:1.55rem;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-top:0}h3{font-size:1.18rem;margin-top:32px}h4{font-size:1.02rem;margin-top:24px}p,li{color:var(--sub)}
+code{font-family:var(--mono);font-size:.92em;background:var(--panel2);padding:.12em .35em;border-radius:4px}pre{background:var(--code);border:1px solid var(--rule);border-radius:9px;padding:16px 18px;overflow:auto;line-height:1.55}pre code{background:none;padding:0;color:#eee}
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:.92rem}th,td{border-bottom:1px solid var(--rule);padding:10px;text-align:left;vertical-align:top}th{color:var(--text);background:var(--panel)}
+.note,.warn,.key{border-left:4px solid var(--accent);background:var(--panel);padding:13px 16px;border-radius:6px;margin:18px 0;color:var(--sub)}.warn{border-left-color:var(--warn)}.key{border-left-color:var(--ok)}
+.flow{font-family:var(--mono);white-space:pre-wrap;background:var(--panel);border:1px solid var(--rule);padding:16px;border-radius:8px;color:var(--sub)}.badge{display:inline-block;font-family:var(--mono);font-size:.75rem;padding:2px 8px;border-radius:4px;background:rgba(169,157,242,.15);color:var(--accent2);margin-right:6px}.day{scroll-margin-top:20px}footer{border-top:1px solid var(--rule);padding:30px 24px;color:var(--faint);font-size:.85rem}
+@media(max-width:850px){.layout{grid-template-columns:1fr}nav{position:static}.layout{padding-top:18px}}
+</style>
+</head>
+<body>
+<header><div class="inner">
+<div class="crumb"><a href="https://sophqft.github.io/ml-math-learning-notes/">ML / Math Learning Notes</a> / DSPy Tool Use</div>
+<h1>DSPyによるAIエージェントのツール利用最適化</h1>
+<p class="tagline">Day 1のDSPy基礎から、Day 2のReAct Agent実装、trajectory解析、Metric設計、Optimizer適用までを1ページで参照するための実習用リファレンス。</p>
+<span class="badge">DSPy</span><span class="badge">AI Agent</span><span class="badge">Tool Use</span><span class="badge">LLMOps</span>
+</div></header>
+
+<div class="layout">
+<nav>
+<h3>QUICK NAV</h3>
+<a href="#safety">公開時の注意</a><a href="#day1">Day 1 — DSPy基礎</a><a href="#signature">Signature</a><a href="#module">Module</a><a href="#tool">Tool</a><a href="#react">ReAct / trajectory</a><a href="#metric">Metric / Optimizer</a><a href="#day2">Day 2 — 実装</a><a href="#baseline">Baseline</a><a href="#trajectory">trajectory解析</a><a href="#metrics2">Tool-use Metrics</a><a href="#optimizer">Optimizer</a><a href="#experiments">実験案</a><a href="#debug">デバッグ</a><a href="#links">公式資料</a>
+</nav>
+
+<main>
+<section id="safety"><h2>公開用ノートとしての注意</h2><div class="warn"><strong>このページは公開情報だけで構成する。</strong> 社内IP、APIキー、社内データ、内部ツール名、実習コード、未公開のモデル名・評価値・プロンプトはGitHubへ載せない。</div></section>
+
+<section id="day1" class="day">
+<h2>Day 1 — DSPyの全体像</h2>
+<div class="flow">LM
+ ↓
+Signature      何を入力して何を出力するか
+ ↓
+Module         どう実行するか
+ ↓
+Tool / ReAct   外部機能を使うAgent
+ ↓
+Prediction     実行結果
+ ↓
+Metric         良し悪しを数値化
+ ↓
+Optimizer      Metricが良くなるようcompile</div>
+
+<h3 id="signature">1. Signature</h3>
+<p><strong>Signature = LLMにやらせたい仕事の入出力仕様。</strong></p>
+<pre><code>class QA(dspy.Signature):
+    """質問に簡潔かつ正確に答える。"""
+
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField()</code></pre>
+<p><code>question</code>が入力、<code>answer</code>が出力。class-based Signatureのdocstringはtask instructionsとして利用される。</p>
+
+<h3 id="module">2. Module</h3>
+<p>Signatureが「何をするか」なら、Moduleは「どうやってするか」。</p>
+<pre><code>predictor = dspy.Predict(QA)
+predictor = dspy.ChainOfThought(QA)
+agent = dspy.ReAct(QA, tools=[...])</code></pre>
+
+<h3 id="tool">3. Tool</h3>
+<pre><code>def calculator(x: int, y: int) -&gt; int:
+    """2つの整数を加算する。"""
+    return x + y</code></pre>
+<p>普通のPythonとしては<code>def calculator(x, y):</code>でも動く。しかしDSPyはToolの関数名、引数、型、docstringを読み、LMにToolの仕様として提示する。</p>
+<div class="key"><strong>型ヒントを書くこと自体がDSPyではない。</strong> Toolを構造化してAgentに渡し、さらに評価と最適化まで行えるのがDSPyの枠組み。</div>
+
+<h3 id="react">4. ReActとtrajectory</h3>
+<div class="flow">thought
+ ↓
+tool_name
+ ↓
+tool_args
+ ↓
+Tool実行
+ ↓
+observation
+ ↓
+次のthought
+ ...
+ ↓
+finish</div>
+<pre><code>agent = dspy.ReAct(
+    QA,
+    tools=[calculator],
+    max_iters=5
+)
+
+pred = agent(question="100と250を足してください")
+print(pred.answer)
+print(pred.trajectory)</code></pre>
+
+<h3 id="metric">5. MetricとOptimizer</h3>
+<pre><code>def metric(example, pred, trace=None):
+    return example.answer == pred.answer</code></pre>
+<p>Metricは「良いとは何か」を定義するPython関数。OptimizerはMetricが改善するようinstructions、demos、場合によってはweightsを調整する。</p>
+<pre><code>optimizer = dspy.BootstrapFewShot(metric=metric)
+
+optimized_agent = optimizer.compile(
+    agent,
+    trainset=trainset
+)</code></pre>
+<table><tr><th>用語</th><th>一言</th></tr><tr><td>Signature</td><td>入出力仕様</td></tr><tr><td>Module</td><td>実行戦略</td></tr><tr><td>Tool</td><td>Agentが呼べる関数</td></tr><tr><td>ReAct</td><td>推論とTool実行のループ</td></tr><tr><td>Prediction</td><td>実行結果</td></tr><tr><td>trajectory</td><td>Tool利用履歴</td></tr><tr><td>Metric</td><td>採点関数</td></tr><tr><td>Optimizer</td><td>Metricに対してcompileし改善</td></tr></table>
+</section>
+
+<section id="day2" class="day">
+<h2>Day 2 — ツール利用最適化への実装</h2>
+<div class="flow">[1] Toolが必要か
+[2] 正しいToolか
+[3] 引数は正しいか
+[4] 順序は正しいか
+[5] Tool結果を回答に使ったか
+[6] 不要な呼び出しをせず終了したか</div>
+
+<h3 id="baseline">1. Baselineを先に作る</h3>
+<div class="flow">Baseline Agent
+ ↓
+評価
+ ↓
+Failure Analysis
+ ↓
+Metric設計
+ ↓
+Optimizer.compile()
+ ↓
+再評価
+ ↓
+Before / After</div>
+
+<pre><code>def add_numbers(x: int, y: int) -&gt; int:
+    """Add two integers and return the sum."""
+    return x + y
+
+def multiply_numbers(x: int, y: int) -&gt; int:
+    """Multiply two integers and return the product."""
+    return x * y
+
+class ToolQA(dspy.Signature):
+    """Use tools when necessary and answer accurately."""
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField()
+
+agent = dspy.ReAct(
+    ToolQA,
+    tools=[add_numbers, multiply_numbers],
+    max_iters=5,
+)</code></pre>
+
+<pre><code>example = dspy.Example(
+    question="12と30を足してください。",
+    answer="42",
+    expected_tool="add_numbers",
+    max_tool_calls=1,
+).with_inputs("question")</code></pre>
+<p><code>expected_tool</code>はTool利用評価用に自分で追加する教師ラベル。</p>
+
+<h3 id="trajectory">2. trajectoryからToolを取り出す</h3>
+<pre><code>def get_used_tools(pred):
+    used_tools = []
+
+    for key, value in pred.trajectory.items():
+        if key.startswith("tool_name_") and value != "finish":
+            used_tools.append(value)
+
+    return used_tools</code></pre>
+
+<h3 id="metrics2">3. Tool-use Metrics</h3>
+<table><tr><th>Metric</th><th>見るもの</th></tr><tr><td>Task success</td><td>最終タスクが成功したか</td></tr><tr><td>Tool selection accuracy</td><td>正しいToolを選んだか</td></tr><tr><td>No-tool accuracy</td><td>Tool不要時に呼ばなかったか</td></tr><tr><td>Argument accuracy</td><td>引数が正しいか</td></tr><tr><td>Invalid-call rate</td><td>存在しないToolや不正引数</td></tr><tr><td>Avg. tool calls</td><td>効率</td></tr><tr><td>Latency / cost</td><td>運用性能</td></tr></table>
+<pre><code>def tool_choice_metric(example, pred, trace=None):
+    used_tools = get_used_tools(pred)
+
+    if example.expected_tool == "none":
+        return len(used_tools) == 0
+
+    if len(used_tools) == 0:
+        return False
+
+    return used_tools[0] == example.expected_tool</code></pre>
+
+<h4>複合Scoreの例</h4>
+<p><code>S = 0.6 × Answer + 0.4 × Tool − 0.05 × ExtraCalls</code></p>
+<div class="note">重みは例。実際には「何を良いAgentと定義するか」自体が評価設計の中心。</div>
+
+<h3 id="optimizer">4. Optimizer</h3>
+<table><tr><th>Optimizer</th><th>主な用途</th></tr><tr><td>BootstrapFewShot</td><td>まず試すdemo最適化の基準</td></tr><tr><td>COPRO</td><td>instructions改善</td></tr><tr><td>GEPA</td><td>feedbackを使うinstruction最適化。Agent/tool-use候補</td></tr><tr><td>MIPROv2</td><td>instructions + demos</td></tr><tr><td>SIMBA</td><td>失敗例を見ながらinstructions/demosを反復改善</td></tr><tr><td>AvatarOptimizer</td><td>Agent-style program向け候補</td></tr></table>
+<pre><code>optimizer = dspy.BootstrapFewShot(
+    metric=combined_metric
+)
+
+optimized_agent = optimizer.compile(
+    agent,
+    trainset=trainset
+)</code></pre>
+
+<h3 id="experiments">5. 実験案</h3>
+<ul><li>曖昧なTool名/docstring vs 明確なTool名/docstring。</li><li>似たToolを複数置いたときの選択性能。</li><li>Tool不要問題を増やしたときの過剰利用。</li><li>引数の型・名前・Literal制約の影響。</li><li><code>max_iters</code>と性能・呼び出し回数・遅延の関係。</li><li>Baseline vs BootstrapFewShot / GEPA / MIPROv2 / SIMBA。</li></ul>
+
+<h3 id="debug">6. デバッグ順序</h3>
+<ol><li>DSPyバージョン確認。</li><li>Toolを単体実行。</li><li>1問だけAgent実行。</li><li><code>pred.answer</code>確認。</li><li><code>pred.trajectory</code>確認。</li><li>expected toolとactual toolを並べる。</li><li>Metricを単体実行。</li><li>複数問Baseline評価。</li><li>最後にOptimizerをcompile。</li></ol>
+
+<h3>7. Before / After</h3>
+<table><tr><th>Metric</th><th>Baseline</th><th>Optimized</th></tr><tr><td>Task success</td><td>測定</td><td>測定</td></tr><tr><td>Tool selection accuracy</td><td>測定</td><td>測定</td></tr><tr><td>No-tool accuracy</td><td>測定</td><td>測定</td></tr><tr><td>Invalid-call rate</td><td>測定</td><td>測定</td></tr><tr><td>Avg. tool calls</td><td>測定</td><td>測定</td></tr><tr><td>Latency / cost</td><td>取得可能なら測定</td><td>取得可能なら測定</td></tr></table>
+<div class="key">改善しなかった結果も価値がある。どのFailure categoryが残ったか、精度とTool call数・latency・costのトレードオフを説明する。</div>
+</section>
+
+<section id="links"><h2>公式資料</h2>
+<ul><li><a href="https://dspy.ai/">DSPy Overview</a></li><li><a href="https://dspy.ai/getting-started/class-based-signatures/">Class-based signatures</a></li><li><a href="https://dspy.ai/getting-started/react-and-tools/">Tools with ReAct</a></li><li><a href="https://dspy.ai/api/modules/ReAct/">ReAct API</a></li><li><a href="https://dspy.ai/getting-started/metrics/">Metrics</a></li><li><a href="https://dspy.ai/diving-deeper/choosing-an-optimizer/">Optimizers: choosing one</a></li><li><a href="https://dspy.ai/tutorials/tool_use/">Advanced Tool Use</a></li></ul>
+<p>確認日：2026-09-01。</p>
+</section>
+</main>
+</div>
+<footer><div style="max-width:1200px;margin:auto">Public study notes. Company-specific or confidential information is intentionally excluded.</div></footer>
+</body></html>
